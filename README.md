@@ -16,7 +16,8 @@ Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.j
   weitere in einem eigenen Fenster.
 - **Hervorheben:** Marker in der Leiste wählen, Text mit der Maus markieren. Daneben Text, Zeichnen, Bild und Unterschrift.
 - **Eigene Tastaturkürzel:** Strg+H „Hervorheben“ und Strg+T „Text“ – der erste Druck wählt das Werkzeug samt seiner Leiste, der
-  zweite schaltet es ab und schließt die Leiste (auch mitten im Tippen). Strg+G springt ins Seitenfeld und
+  zweite schaltet es ab und schließt die Leiste (auch mitten im Tippen). Strg+I öffnet und schließt die Dokumenteigenschaften
+  (sonst am Ende des Menüs „»“). Strg+G springt ins Seitenfeld und
   markiert die Zahl – Seitenzahl tippen, Enter. „Weitersuchen“ geht dann mit F3 oder Strg+Umschalt+G statt Strg+G.
 - **Speichern:** Speichern-Knopf der Leiste oder Strg+S; der Dialog „Dokument speichern“ schlägt die angezeigte Datei
   selbst vor (Überschreiben mit Rückfrage), ein anderer Name ist möglich – danach zeigt das Fenster die neue Datei.
@@ -51,11 +52,13 @@ entpackt und geprüft ist. Danach neu bauen und den Installer neu erzeugen.
 - `Forms\MainForm` – nur das WebView, keine eigene Symbolleiste und keine Statuszeile. Der Viewer (`pdfjs\web\viewer.html`) läuft unter dem virtuellen Host
   `https://pdfjs.local`; die Datei geht als SharedBuffer an die Seite und von dort per `PDFViewerApplication.open({ data })` an PDF.js.
 - `Classes\AppSettings` – Fensterlage als JSON.
-- `make-icon.ps1` – erzeugt `MozillaPDF.ico` aus `pdfjs-logo.svg`; Edge rendert jede Größe einzeln (16 bis 256 px). Bei Änderungen
-  auch das Icon in `Forms\MainForm.resx` erneuern.
+- `make-icon.ps1` – erzeugt `MozillaPDF.ico` aus `mozillapdf-icon.svg` (ab 32 px, „{js}“ erst ab 48 px) und
+  `mozillapdf-icon-small.svg` (16–24 px); Edge rendert jede Größe einzeln (16 bis 256 px). Bei Änderungen auch das Icon in
+  `Forms\MainForm.resx` erneuern.
 
 ## Lizenzen
 
 MozillaPDF steht wie PDF.js unter der Apache-Lizenz 2.0 (`LICENSE`, Copyright-Vermerk in `NOTICE`); der Installer zeigt die Lizenz
-vor der Installation. PDF.js bringt seine Lizenz in `pdfjs\LICENSE` mit. Das Programm-Icon ist das PDF.js-Logo aus demselben Projekt. „Mozilla“ ist eine Marke der Mozilla Foundation;
+vor der Installation. PDF.js bringt seine Lizenz in `pdfjs\LICENSE` mit. Das Programm-Icon ist eine eigene Gestaltung
+(Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben). „Mozilla“ ist eine Marke der Mozilla Foundation;
 MozillaPDF ist kein Produkt von Mozilla.

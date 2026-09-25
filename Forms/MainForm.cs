@@ -121,7 +121,8 @@ public partial class MainForm : Form
     /// deren click() auf (onOpenFile, PDF.js 6.3) – statt des Browser-Dialogs kommt „openRequest“ an die App;</item>
     /// <item>setzt vor das Menü „»“ einen „?“-Knopf im Stil der Leiste (Symbol als CSS-Maske wie die übrigen Knöpfe) und fängt F1 ab –
     /// beides meldet „help“;</item>
-    /// <item>eigene Kürzel: Strg+H „Hervorheben“ und Strg+T „Text“ als Umschalter, Strg+G springt ins Seitenfeld;</item>
+    /// <item>eigene Kürzel: Strg+H „Hervorheben“, Strg+T „Text“ und Strg+I „Dokumenteigenschaften“ als Umschalter, Strg+G springt ins
+    /// Seitenfeld;</item>
     /// <item>zeigt auf der leeren Fläche, wie man eine Datei öffnet, und sperrt Speichern und Drucken (Knöpfe, Strg+S, Strg+P), bis das
     /// erste Dokument steht;</item>
     /// <item>fängt abgelegte Dateien in der Einfangphase ab (vor dem eigenen Drop von PDF.js, der den Pfad verlöre), zeigt beim Ziehen
@@ -200,10 +201,13 @@ public partial class MainForm : Form
             const plainCtrl = e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey;
             const tools = { h: "editorHighlightButton", t: "editorFreeTextButton" };
             const key = e.key.toLowerCase();
-            if (plainCtrl && (key in tools || key === "g")) {
+            if (plainCtrl && (key in tools || key === "g" || key === "i")) {
               e.preventDefault(); e.stopImmediatePropagation();
               if (!hasDocument) { return; }
-              if (key in tools) {
+              if (key === "i") { // Strg+I: „Dokumenteigenschaften“ aus dem Menü „»“, ebenfalls als Umschalter
+                const dialog = document.getElementById("documentPropertiesDialog");
+                document.getElementById(dialog?.open ? "documentPropertiesClose" : "documentProperties")?.click();
+              } else if (key in tools) {
                 const tool = document.getElementById(tools[key]);
                 if (!tool || tool.disabled) { return; }
                 // Mitten im Tippen (Textfeld hat den Fokus) übernähme der Klick nur den Text, das Werkzeug bliebe an (geprüft 25.09.2026):

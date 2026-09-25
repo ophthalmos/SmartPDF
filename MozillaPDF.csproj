@@ -12,7 +12,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>MozillaPDF</RootNamespace>
     <AssemblyName>MozillaPDF</AssemblyName>
-    <ApplicationIcon>MozillaPDF.ico</ApplicationIcon><!-- PDF.js-Logo (pdfjs-logo.svg, Apache 2.0), gerendert von make-icon.ps1 -->
+    <ApplicationIcon>MozillaPDF.ico</ApplicationIcon><!-- eigenes Icon (mozillapdf-icon*.svg), gerendert von make-icon.ps1 -->
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <FileVersion>1.0.0</FileVersion>
