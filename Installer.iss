@@ -1,12 +1,12 @@
 ﻿; ============================================================================
 ; MozillaPDF – Installer (Inno Setup 7)
-; Vorher: Release bauen (dotnet build MozillaPDF.csproj -c Release), dann dieses Skript mit
+; Vorher: Release bauen (dotnet build MozillaPDF.csproj -c Release -p:Platform=x64), dann dieses Skript mit
 ; "C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss kompilieren. Ergebnis: MozillaPDFSetup.exe im Projektordner.
 ; ============================================================================
 
 #define appName "MozillaPDF"
-#define appVersion GetVersionNumbersString("bin\Release\net10.0-windows\MozillaPDF.exe")
 #define releaseDir "bin\x64\Release\net10.0-windows"
+#define appVersion GetVersionNumbersString(releaseDir + "\MozillaPDF.exe")
 
 [Setup]
 AppId={{3F6C2E8D-9A41-4B57-8C2E-7D15A90B64E3}

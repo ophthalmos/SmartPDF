@@ -29,7 +29,8 @@ Das Programm wird nur auf Deutsch gepflegt (Oberfläche, Installer, PDF.js-Sprac
 ## Bauen
 
 1. `update-pdfjs.ps1` ausführen – lädt die aktuelle PDF.js-Distribution nach `pdfjs\` (Ordner ist git-ignoriert).
-2. `dotnet build MozillaPDF.csproj -c Release` – `pdfjs\` wird neben die EXE kopiert.
+2. `dotnet build MozillaPDF.csproj -c Release -p:Platform=x64` – `pdfjs\` wird neben die EXE kopiert; der Installer nimmt
+   `bin\x64\Release\net10.0-windows`.
 3. Installer: `"C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss` → `MozillaPDFSetup.exe`.
 
 ## PDF.js aktualisieren
