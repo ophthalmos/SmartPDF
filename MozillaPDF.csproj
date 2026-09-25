@@ -1,0 +1,44 @@
+<Project>
+  <!-- SDK-Importe explizit statt über das Sdk-Attribut, damit die Reference-Bereinigung unten NACH den NuGet-Targets
+       ausgewertet wird (gleicher Kniff wie in PDFlight) -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <RootNamespace>MozillaPDF</RootNamespace>
+    <AssemblyName>MozillaPDF</AssemblyName>
+    <ApplicationIcon>MozillaPDF.ico</ApplicationIcon><!-- PDF.js-Logo (pdfjs-logo.svg, Apache 2.0), gerendert von make-icon.ps1 -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <Product>MozillaPDF</Product>
+    <Authors>Wilhelm Happe</Authors>
+    <Description>PDF-Betrachter mit Hervorheben und Anmerkungen auf Basis von PDF.js</Description>
+    <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Die entpackte PDF.js-Distribution (update-pdfjs.ps1) wandert neben die EXE; das WebView bindet sie als https://pdfjs.local ein. -->
+    <None Include="pdfjs\**" CopyToOutputDirectory="PreserveNewest" LinkBase="pdfjs" />
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" /><!-- Apache-Lizenz 2.0, im Info-Dialog verlinkt -->
+    <None Include="NOTICE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- WebView2 referenziert ungefragt auch seine WPF-Assembly; sie wird nicht benötigt und verursacht die MSB3277-Warnung
+       (WindowsBase-Versionskonflikt). Das Entfernen muss nach den NuGet-Targets des Pakets stehen. -->
+  <ItemGroup>
+    <Reference Remove="@(Reference-&gt;WithMetadataValue('Filename', 'Microsoft.Web.WebView2.Wpf'))" />
+  </ItemGroup>
+</Project>

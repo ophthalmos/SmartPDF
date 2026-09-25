@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+*.user
+
+# PDF.js-Distribution: kommt über update-pdfjs.ps1 von GitHub
+pdfjs/
+pdfjs.neu/
+pdfjs.alt/
+
+# Installer-Ergebnis
+MozillaPDFSetup.exe
