@@ -15,6 +15,9 @@ Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.j
   Aufrufparameter: `MozillaPDF.exe datei.pdf`, oder per Drag & Drop ins Fenster – bei mehreren Dateien öffnet die erste hier, jede
   weitere in einem eigenen Fenster.
 - **Hervorheben:** Marker in der Leiste wählen, Text mit der Maus markieren. Daneben Text, Zeichnen, Bild und Unterschrift.
+- **Eigene Tastaturkürzel:** Strg+H „Hervorheben“ und Strg+T „Text“ – der erste Druck wählt das Werkzeug samt seiner Leiste, der
+  zweite schaltet es ab und schließt die Leiste (auch mitten im Tippen). Strg+G springt ins Seitenfeld und
+  markiert die Zahl – Seitenzahl tippen, Enter. „Weitersuchen“ geht dann mit F3 oder Strg+Umschalt+G statt Strg+G.
 - **Speichern:** Speichern-Knopf der Leiste oder Strg+S; der Dialog „Dokument speichern“ schlägt die angezeigte Datei
   selbst vor (Überschreiben mit Rückfrage), ein anderer Name ist möglich – danach zeigt das Fenster die neue Datei.
 - **Schließen** mit ungespeicherten Hervorhebungen oder Anmerkungen fragt nach: Speichern, Nicht speichern oder Abbrechen. Beim

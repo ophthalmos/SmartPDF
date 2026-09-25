@@ -32,6 +32,7 @@ namespace MozillaPDF.Forms;
 public partial class MainForm : Form
 {
     private const string Host = "pdfjs.local";
+    private const string PdfJsWebsite = "https://mozilla.github.io/pdf.js/";
     private readonly string pdfjsFolder = Path.Combine(AppContext.BaseDirectory, "pdfjs");
     private static readonly string DataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MozillaPDF");
     private readonly AppSettings settings = AppSettings.Load();
@@ -120,6 +121,7 @@ public partial class MainForm : Form
     /// deren click() auf (onOpenFile, PDF.js 6.3) – statt des Browser-Dialogs kommt „openRequest“ an die App;</item>
     /// <item>setzt vor das Menü „»“ einen „?“-Knopf im Stil der Leiste (Symbol als CSS-Maske wie die übrigen Knöpfe) und fängt F1 ab –
     /// beides meldet „help“;</item>
+    /// <item>eigene Kürzel: Strg+H „Hervorheben“ und Strg+T „Text“ als Umschalter, Strg+G springt ins Seitenfeld;</item>
     /// <item>zeigt auf der leeren Fläche, wie man eine Datei öffnet, und sperrt Speichern und Drucken (Knöpfe, Strg+S, Strg+P), bis das
     /// erste Dokument steht;</item>
     /// <item>fängt abgelegte Dateien in der Einfangphase ab (vor dem eigenen Drop von PDF.js, der den Pfad verlöre), zeigt beim Ziehen
@@ -191,6 +193,29 @@ public partial class MainForm : Form
           window.addEventListener("keydown", e => {
             const output = (e.ctrlKey || e.metaKey) && !e.altKey && ["s", "p"].includes(e.key.toLowerCase());
             if (output && !hasDocument) { e.preventDefault(); e.stopImmediatePropagation(); return; } // Strg+S, Strg+P: s. hasDocument
+            // Eigene Kürzel (Wunsch vom 25.09.2026): Strg+H „Hervorheben“, Strg+T „Text“ – wie ein Klick auf den Knopf, also als Umschalter:
+            // der erste Druck wählt das Werkzeug samt seiner Leiste, der zweite schaltet es ab und schließt die Leiste (PDF.js schaltet beim
+            // Klick auf den aktiven Knopf zurück auf „kein Werkzeug“). Strg+G springt ins Seitenfeld und markiert die Zahl; es ersetzt
+            // damit „Weitersuchen“ von PDF.js – das bleibt über F3, Enter im Suchfeld und Strg+Umschalt+G erreichbar.
+            const plainCtrl = e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey;
+            const tools = { h: "editorHighlightButton", t: "editorFreeTextButton" };
+            const key = e.key.toLowerCase();
+            if (plainCtrl && (key in tools || key === "g")) {
+              e.preventDefault(); e.stopImmediatePropagation();
+              if (!hasDocument) { return; }
+              if (key in tools) {
+                const tool = document.getElementById(tools[key]);
+                if (!tool || tool.disabled) { return; }
+                // Mitten im Tippen (Textfeld hat den Fokus) übernähme der Klick nur den Text, das Werkzeug bliebe an (geprüft 25.09.2026):
+                // erst das Feld abgeben, dann umschalten.
+                const editing = document.activeElement?.closest?.(".annotationEditorLayer");
+                if (editing) { document.activeElement.blur(); setTimeout(() => tool.click(), 0); } else { tool.click(); }
+              } else {
+                const page = document.getElementById("pageNumber");
+                if (page) { page.focus(); page.select(); }
+              }
+              return;
+            }
             if (e.key !== "F1") { return; }
             e.preventDefault(); e.stopPropagation();
             post({ type: "help" });
@@ -410,8 +435,6 @@ public partial class MainForm : Form
         };
         TaskDialog.ShowDialog(this, page);
     }
-
-    private const string PdfJsWebsite = "https://mozilla.github.io/pdf.js/";
 
     /// <summary>Webseite im Standardbrowser öffnen.</summary>
     private void OpenInBrowser(string url)

@@ -2,11 +2,14 @@
 # Jede Größe wird einzeln von Edge im Headless-Modus aus dem SVG gerendert (transparent) – so bleibt das Logo auch in 16 px scharf,
 # statt aus einem großen Bild heruntergerechnet zu werden. Einträge: 256 px als PNG, kleinere als 32-Bit-DIB, weil System.Drawing.Icon
 # und damit WinForms PNG-Einträge unter 256 px nicht zuverlässig lesen.
+# Hintergrund: volle Fläche in -Background (Vorgabe rgb(255, 237, 153) – das Logo allein wirkte auf hellen Flächen blass, Wunsch vom
+# 25.09.2026); -Background "" ergibt das Logo transparent.
 # Danach das Icon auch in Forms\MainForm.resx ($this.Icon) erneuern.
 param(
     [string]$Svg = (Join-Path $PSScriptRoot "pdfjs-logo.svg"),
     [string]$Out = (Join-Path $PSScriptRoot "MozillaPDF.ico"),
-    [string]$Preview = ""
+    [string]$Preview = "",
+    [string]$Background = "#FFED99"
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -18,10 +21,12 @@ if (Test-Path $work) { Remove-Item $work -Recurse -Force }
 New-Item -ItemType Directory $work | Out-Null
 Copy-Item $Svg (Join-Path $work "logo.svg")
 
+$bg = if ($Background) { $Background } else { "transparent" }
+
 function Render([int]$s) {
     # Größerer Viewport als das Bild (Headless-Fenster haben eine Mindestgröße), danach links oben auf s×s zuschneiden
     $page = Join-Path $work "page-$s.html"; $png = Join-Path $work "shot-$s.png"
-    Set-Content $page "<!doctype html><html><head><style>html,body{margin:0;background:transparent}img{display:block;width:${s}px;height:${s}px}</style></head><body><img src='logo.svg'></body></html>" -Encoding UTF8
+    Set-Content $page "<!doctype html><html><head><style>html,body{margin:0;background:transparent}img{display:block;width:${s}px;height:${s}px;background:$bg}</style></head><body><img src='logo.svg'></body></html>" -Encoding UTF8
     $args = @("--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--user-data-dir=`"$work\profile`"",
               "--hide-scrollbars", "--force-device-scale-factor=1", "--default-background-color=00000000", "--window-size=400,400",
               "--screenshot=`"$png`"", "`"file:///$($page.Replace('\', '/'))`"")
