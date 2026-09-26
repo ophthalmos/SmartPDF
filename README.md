@@ -21,8 +21,9 @@ Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.j
   markiert die Zahl – Seitenzahl tippen, Enter. „Weitersuchen“ geht dann mit F3 oder Strg+Umschalt+G statt Strg+G.
 - **Speichern:** Speichern-Knopf der Leiste oder Strg+S; der Dialog „Dokument speichern“ schlägt die angezeigte Datei
   selbst vor (Überschreiben mit Rückfrage), ein anderer Name ist möglich – danach zeigt das Fenster die neue Datei.
-- **Schließen** mit ungespeicherten Hervorhebungen oder Anmerkungen fragt nach: Speichern, Nicht speichern oder Abbrechen. Beim
-  Öffnen einer anderen Datei bietet PDF.js das Speichern von sich aus an.
+- **Schließen** oder **Öffnen einer anderen Datei** mit ungespeicherten Hervorhebungen oder Anmerkungen fragt nach: Speichern,
+  Nicht speichern oder Abbrechen. F5 lädt nichts neu – die Browser-Kürzel von WebView2 sind aus, damit das Dokument nicht aus
+  Versehen verschwindet.
 - **Programminformationen:** „?“ rechts in der Leiste (vor dem Menü „»“) oder F1 – kurze Beschreibung, Programm- und
   PDF.js-Version, Autor und Lizenz. Ein Fragezeichen in der Titelleiste gibt es bewusst nicht: Windows zeigt es nur ohne Minimieren-
   und Maximieren-Knopf. Wie man eine Datei öffnet, steht auf der leeren Fläche, solange kein Dokument geladen ist.

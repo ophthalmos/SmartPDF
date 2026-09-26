@@ -17,7 +17,12 @@ namespace MoziPDF.Forms;
 /// Öffnen (Knopf im Menü „»“, Strg+O) auf den Öffnen-Dialog der App um, weil die App den Pfad fürs Speichern kennen muss, und ergänzt
 /// einen „?“-Knopf samt F1 für die Programminformationen (<see cref="ShowHelp"/>). Fehler meldet ein Dialog.</item>
 /// <item>Speichern (Speichern-Knopf der Leiste, Strg+S) bettet die Hervorhebungen ein und löst einen Download aus; das WebView fängt ihn
-/// ab und schreibt ihn dorthin, wo der Speichern-Dialog es will. Beim Schließen mit ungespeicherten Änderungen fragt die App nach.</item>
+/// ab und schreibt ihn dorthin, wo der Speichern-Dialog es will. Beim Schließen und vor dem Öffnen einer anderen Datei fragt die App bei
+/// ungespeicherten Änderungen nach (Speichern / Nicht speichern / Abbrechen); „Speichern“ löst den Download des Viewers aus und wartet
+/// auf ihn (<see cref="SaveViaViewerAsync"/>). PDF.js selbst speichert beim Dokumentwechsel nicht mehr – das Seitenskript setzt vor dem
+/// Öffnen den Änderungsmerker zurück, sonst käme der Speichern-Dialog ein zweites Mal, und zwar mit dem Namen der neuen Datei.</item>
+/// <item>Die Browser-Tastenkürzel von WebView2 sind aus (F5/Strg+R luden die Viewer-Seite neu und warfen das Dokument samt Änderungen
+/// weg); PDF.js behandelt Strg+F, Strg+P und den Zoom selbst per keydown.</item>
 /// <item>Lage, Größe und Maximiert-Zustand des Fensters merkt <see cref="AppSettings"/>.</item>
 /// <item>Drag &amp; Drop: Das Seitenskript fängt abgelegte Dateien ab, bevor PDF.js sie selbst (ohne Pfad) öffnet, und meldet sie per
 /// postMessageWithAdditionalObjects mit echtem Pfad (<see cref="OpenDroppedFiles"/>): die erste PDF in diesem Fenster, jede weitere in
@@ -40,13 +45,20 @@ public partial class MainForm : Form
     private string? currentPath; // angezeigte Datei; Vorgabe für den Speichern-Dialog
     private bool pageReady;
     private bool closeApproved;  // Rückfrage beim Schließen erledigt: FormClosing lässt das nächste Schließen durch
-    private bool closeAfterSave; // „Speichern“ in der Rückfrage: nach dem fertigen Download schließen
+    private TaskCompletionSource<bool>? saveTask; // ein von der App ausgelöstes Speichern (downloadOrSave) wartet auf seinen Download
 
     public MainForm(string[] args)
     {
         InitializeComponent();
-        startFile = args.FirstOrDefault(a => a.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && File.Exists(a));
+        startFile = args.Where(a => a.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && File.Exists(a)).Select(FullPath).FirstOrDefault(p => p != null);
         RestoreWindowBounds();
+    }
+
+    /// <summary>Voller Pfad für Befehlszeilenangaben – ein relativer bliebe sonst bis in den Speichern-Dialog relativ (ohne Startordner).</summary>
+    private static string? FullPath(string path)
+    {
+        try { return Path.GetFullPath(path); }
+        catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException) { return null; }
     }
 
     // ==== Fensterlage
@@ -104,7 +116,8 @@ public partial class MainForm : Form
         core.Settings.IsStatusBarEnabled = false;
         core.Settings.AreDevToolsEnabled = false;
         core.Settings.IsReputationCheckingRequired = false; // kein SmartScreen-Abgleich
-        core.SetVirtualHostNameToFolderMapping(Host, pdfjsFolder, CoreWebView2HostResourceAccessKind.Allow); // Viewer, Worker, Schriften, CMaps, Locale
+        core.Settings.AreBrowserAcceleratorKeysEnabled = false; // F5/Strg+R luden die Viewer-Seite neu – Dokument und Änderungen weg (Review 26.09.2026); PDF.js' eigene Kürzel bleiben
+        core.SetVirtualHostNameToFolderMapping(Host, pdfjsFolder, CoreWebView2HostResourceAccessKind.DenyCors); // Viewer, Worker, Schriften, CMaps, Locale – nur vom eigenen Ursprung
         core.DownloadStarting += Core_DownloadStarting;
         core.NavigationCompleted += Core_NavigationCompleted;
         core.WebMessageReceived += Core_WebMessageReceived;
@@ -150,6 +163,9 @@ public partial class MainForm : Form
             const viewer = await app();
             await viewer.initializedPromise;
             try {
+              // Die App hat vor dem Wechsel selbst gefragt (gespeichert oder verworfen): den Änderungsmerker löschen, sonst speicherte
+              // close() im open() noch einmal – der Download käme erst nach dem Wechsel an und träfe den Namen der neuen Datei
+              viewer.pdfDocument?.annotationStorage?.resetModified();
               await viewer.open({ data, filename: (e.additionalData || {}).fileName });
               hideHint();
               hasDocument = true; enableOutput(true);
@@ -160,11 +176,12 @@ public partial class MainForm : Form
             const viewer = await app();
             await viewer.initializedPromise;
             const input = () => new Promise(resolve => {
-              const wait = () => viewer._openFileInput ? resolve() : setTimeout(wait, 20);
+              let tries = 0; // _openFileInput ist ein Internum von PDF.js – fehlt es nach einem Update, soll das auffallen statt still zu warten
+              const wait = () => viewer._openFileInput ? resolve(true) : (++tries > 250 ? resolve(false) : setTimeout(wait, 20));
               wait();
             });
-            await input(); // legt run() erst nach der Initialisierung an
-            viewer._openFileInput = { click: () => post({ type: "openRequest" }) };
+            if (!await input()) { post({ type: "error", message: "Der Öffnen-Knopf des Viewers lässt sich nicht umleiten (PDF.js-Version geändert?). Öffnen geht weiter per Drag & Drop." }); return; }
+            viewer._openFileInput = { click: () => post({ type: "openRequest" }) }; // legt run() erst nach der Initialisierung an
           })();
           // Rahmen, solange Dateien über dem Fenster sind. Ein Zähler aus dragenter/dragleave taugt nicht: Chromium meldet schon beim
           // Hereinziehen ein dragleave, das ihn sofort ausgleicht (geprüft 25.09.2026). Deshalb: jedes dragover frischt den Rahmen auf,
@@ -258,7 +275,12 @@ public partial class MainForm : Form
 
     private void Core_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
     {
-        if (!e.IsSuccess) { ShowError("Viewer konnte nicht geladen werden", e.WebErrorStatus.ToString()); return; }
+        if (!e.IsSuccess)
+        {
+            if (e.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled) { return; } // von Core_NavigationStarting abgebrochen (Weblink, file:) – kein Fehler
+            ShowError("Viewer konnte nicht geladen werden", e.WebErrorStatus.ToString());
+            return;
+        }
         if (pageReady) { return; }
         pageReady = true;
         if (startFile != null) { var file = startFile; startFile = null; BeginInvoke(() => ShowFile(file)); }
@@ -331,7 +353,7 @@ public partial class MainForm : Form
             FileName = currentPath == null ? "dokument.pdf" : Path.GetFileName(currentPath), // meist will man das Dokument selbst speichern
             Title = "Dokument speichern",
         };
-        if (dialog.ShowDialog(this) != DialogResult.OK) { e.Cancel = true; closeAfterSave = false; return; }
+        if (dialog.ShowDialog(this) != DialogResult.OK) { e.Cancel = true; FinishSave(false); return; }
         e.ResultFilePath = dialog.FileName;
         e.DownloadOperation.StateChanged += (s, args) =>
         {
@@ -339,28 +361,85 @@ public partial class MainForm : Form
             {
                 currentPath = e.DownloadOperation.ResultFilePath; // „Speichern unter“: Titel und nächster Vorschlag folgen der neuen Datei
                 Text = Path.GetFileName(currentPath) + " – MoziPDF";
-                if (closeAfterSave) { closeApproved = true; BeginInvoke(Close); } // Speichern kam aus der Rückfrage beim Schließen
+                FinishSave(true);
             }
             else if (e.DownloadOperation.State == CoreWebView2DownloadState.Interrupted)
             {
-                closeAfterSave = false; // nicht gespeichert – das Fenster bleibt offen
                 ShowError("Speichern fehlgeschlagen", e.DownloadOperation.InterruptReason.ToString());
+                FinishSave(false);
             }
+        };
+    }
+
+    /// <summary>Ein wartendes <see cref="SaveViaViewerAsync"/> freigeben – die Fortsetzung läuft dank RunContinuationsAsynchronously nicht im
+    /// Download-Rückruf, sondern über die Nachrichtenschleife.</summary>
+    private void FinishSave(bool saved)
+    {
+        var pending = saveTask;
+        saveTask = null;
+        pending?.TrySetResult(saved);
+    }
+
+    /// <summary>Speichern-Knopf des Viewers auslösen und auf den fertigen Download warten (bzw. auf den Abbruch im Dialog). Nur aufrufen,
+    /// wenn es Änderungen gibt – sonst käme kein Download und die Aufgabe bliebe offen.</summary>
+    private Task<bool> SaveViaViewerAsync()
+    {
+        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        saveTask = pending;
+        _ = webView.CoreWebView2.ExecuteScriptAsync("PDFViewerApplication.downloadOrSave()");
+        return pending.Task;
+    }
+
+    private enum SaveChoice { Save, Discard, Cancel }
+
+    /// <summary>Rückfrage bei ungespeicherten Hervorhebungen oder Anmerkungen – beim Schließen und vor dem Dokumentwechsel.</summary>
+    private SaveChoice AskSaveChanges()
+    {
+        var save = new TaskDialogButton("Speichern");
+        var discard = new TaskDialogButton("Nicht speichern");
+        var choice = TaskDialog.ShowDialog(this, new TaskDialogPage
+        {
+            Caption = "MoziPDF",
+            Heading = $"Änderungen an „{Path.GetFileName(currentPath)}“ speichern?",
+            Text = "Die Hervorhebungen und Anmerkungen gehen sonst verloren.",
+            Icon = TaskDialogIcon.Warning,
+            Buttons = { save, discard, TaskDialogButton.Cancel },
+            DefaultButton = save,
+        });
+        return choice == save ? SaveChoice.Save : choice == discard ? SaveChoice.Discard : SaveChoice.Cancel;
+    }
+
+    /// <summary>Vor dem Öffnen einer anderen Datei: bei Änderungen fragen, auf Wunsch speichern. True = weiter (nichts offen, gespeichert
+    /// oder verworfen). Der Dialog läuft per BeginInvoke, nie in der Fortsetzung nach ExecuteScriptAsync (siehe Klassenkommentar).</summary>
+    private async Task<bool> ConfirmSwitchAsync()
+    {
+        if (currentPath == null || !await HasUnsavedChangesAsync()) { return true; }
+        var asked = new TaskCompletionSource<SaveChoice>(TaskCreationOptions.RunContinuationsAsynchronously);
+        BeginInvoke(() => asked.SetResult(AskSaveChanges()));
+        return await asked.Task switch
+        {
+            SaveChoice.Save => await SaveViaViewerAsync(),
+            SaveChoice.Discard => true,
+            _ => false,
         };
     }
 
     /// <summary>Abgelegte Dateien öffnen: die erste PDF in diesem Fenster, jede weitere in einem neuen MoziPDF-Fenster (ein Dokument je
     /// Fenster). Keine PDF dabei: Hinweis.</summary>
-    private void OpenDroppedFiles(IReadOnlyList<string> paths)
+    private async void OpenDroppedFiles(IReadOnlyList<string> paths)
     {
         var pdfs = paths.Where(p => p.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && File.Exists(p)).ToList();
         if (pdfs.Count == 0) { ShowError("Keine PDF-Datei", "MoziPDF öffnet nur PDF-Dateien."); return; }
-        if (!pageReady) { startFile ??= pdfs[0]; } else { ShowFile(pdfs[0]); }
-        foreach (var more in pdfs.Skip(1))
-        {
-            try { Process.Start(new ProcessStartInfo(Application.ExecutablePath) { ArgumentList = { more } }); }
-            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { ShowError($"„{Path.GetFileName(more)}“ konnte nicht geöffnet werden", ex.Message); }
-        }
+        foreach (var more in pdfs.Skip(1)) { StartNewWindow(more); }
+        var first = pdfs[0];
+        if (!pageReady) { if (startFile == null) { startFile = first; } else { StartNewWindow(first); } return; } // vor dem ersten Laden: die Startdatei bleibt
+        if (await ConfirmSwitchAsync()) { ShowFile(first); }
+    }
+
+    private void StartNewWindow(string path)
+    {
+        try { Process.Start(new ProcessStartInfo(Application.ExecutablePath) { ArgumentList = { path } }); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { ShowError($"„{Path.GetFileName(path)}“ konnte nicht geöffnet werden", ex.Message); }
     }
 
     /// <summary>Der Viewer bleibt auf seiner Seite: eine Datei, die doch als file://-Navigation ankommt (Drop, bevor das Seitenskript steht),
@@ -473,19 +552,23 @@ public partial class MainForm : Form
     private static partial Regex PdfJsVersionRegex();
 
     /// <summary>Fehlermeldung – grundsätzlich per BeginInvoke, weil viele Aufrufer in WebView2-Rückrufen sitzen (siehe Klassenkommentar).</summary>
-    private void ShowError(string heading, string text) => BeginInvoke(() => TaskDialog.ShowDialog(this, new TaskDialogPage
+    private void ShowError(string heading, string text)
     {
-        Caption = "MoziPDF",
-        Heading = heading,
-        Text = text,
-        Icon = TaskDialogIcon.Error,
-    }));
+        if (IsDisposed || !IsHandleCreated) { return; } // z.B. ein unterbrochener Download nach dem Schließen – dann gibt es niemanden mehr zu warnen
+        BeginInvoke(() => TaskDialog.ShowDialog(this, new TaskDialogPage
+        {
+            Caption = "MoziPDF",
+            Heading = heading,
+            Text = text,
+            Icon = TaskDialogIcon.Error,
+        }));
+    }
 
     // ==== Aktionen
 
-    private void OpenFile()
+    private async void OpenFile()
     {
-        if (!pageReady) { return; }
+        if (!pageReady || !await ConfirmSwitchAsync()) { return; }
         using OpenFileDialog dialog = new()
         {
             Filter = "PDF-Dateien (*.pdf)|*.pdf",
@@ -514,42 +597,44 @@ public partial class MainForm : Form
 
     /// <summary>Ungespeicherte Hervorhebungen oder Anmerkungen? Die Abfrage an den Viewer ist asynchron, deshalb bricht der Handler das
     /// Schließen zunächst ab, fragt nach und schließt danach selbst erneut (<see cref="closeApproved"/>). „Speichern“ löst den Speichern-
-    /// Knopf des Viewers aus; das Fenster schließt erst, wenn der Download fertig ist (Core_DownloadStarting).
-    /// Beim Öffnen einer anderen Datei speichert PDF.js von sich aus (close() ruft downloadOrSave, wenn etwas geändert ist).</summary>
+    /// Knopf des Viewers aus; das Fenster schließt erst, wenn der Download fertig ist (<see cref="SaveViaViewerAsync"/>).</summary>
     private async void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
     {
-        if (closeApproved || !pageReady || webView.CoreWebView2 == null) { SaveWindowBounds(); return; }
+        // Windows fährt herunter oder meldet ab: nicht blockieren – die Rückfrage käme zu spät, und der Viewer könnte ohnehin nicht mehr speichern
+        if (closeApproved || !pageReady || webView.CoreWebView2 == null || e.CloseReason == CloseReason.WindowsShutDown) { SaveWindowBounds(); return; }
         e.Cancel = true;
         var unsaved = await HasUnsavedChangesAsync();
-        BeginInvoke(() => AskBeforeClose(unsaved)); // nie im Rückruf von ExecuteScriptAsync – dort beendete WebView2 nach Sekunden das Programm
+        BeginInvoke(() => AskBeforeClose(unsaved)); // Dialog über die Nachrichtenschleife (siehe Klassenkommentar)
     }
 
-    private void AskBeforeClose(bool unsaved)
+    private async void AskBeforeClose(bool unsaved)
     {
-        if (!unsaved) { closeApproved = true; Close(); return; }
-        var save = new TaskDialogButton("Speichern");
-        var discard = new TaskDialogButton("Nicht speichern");
-        var choice = TaskDialog.ShowDialog(this, new TaskDialogPage
-        {
-            Caption = "MoziPDF",
-            Heading = $"Änderungen an „{Path.GetFileName(currentPath)}“ speichern?",
-            Text = "Die Hervorhebungen und Anmerkungen gehen sonst verloren.",
-            Icon = TaskDialogIcon.Warning,
-            Buttons = { save, discard, TaskDialogButton.Cancel },
-            DefaultButton = save,
-        });
-        if (choice == save) { closeAfterSave = true; _ = webView.CoreWebView2.ExecuteScriptAsync("PDFViewerApplication.downloadOrSave()"); } // schließt nach dem Download
-        else if (choice == discard) { closeApproved = true; Close(); }
-        // Abbrechen: offen bleiben
+        var choice = unsaved ? AskSaveChanges() : SaveChoice.Discard;
+        if (choice == SaveChoice.Cancel) { return; } // offen bleiben
+        if (choice == SaveChoice.Save && !await SaveViaViewerAsync()) { return; } // Speichern-Dialog abgebrochen oder fehlgeschlagen: offen bleiben
+        closeApproved = true;
+        Close();
     }
 
-    /// <summary>Derselbe Test, mit dem PDF.js beim Schließen eines Dokuments selbst entscheidet, ob es speichern muss (close()).</summary>
+    /// <summary>Derselbe Test, mit dem PDF.js beim Schließen eines Dokuments selbst entscheidet, ob es speichern muss (close()). Die Felder
+    /// sind PDF.js-Interna; fehlen sie nach einem Update, gilt ersatzweise „Anmerkungsspeicher nicht leer“ – lieber einmal zu viel fragen als
+    /// Änderungen still verlieren. Die Fortsetzung wird bewusst über die Nachrichtenschleife geführt (Task.Yield), damit kein Aufrufer aus
+    /// Versehen einen Dialog im Rückruf von ExecuteScriptAsync zeigt.</summary>
     private async Task<bool> HasUnsavedChangesAsync()
     {
         try
         {
-            return await webView.CoreWebView2.ExecuteScriptAsync(
-                "(() => { const a = window.PDFViewerApplication; return !!(a && a._annotationStorageModified && a._hasChanges && a._hasChanges()); })()") == "true";
+            var result = await webView.CoreWebView2.ExecuteScriptAsync("""
+                (() => {
+                  const a = window.PDFViewerApplication;
+                  if (!a) { return false; }
+                  if (typeof a._hasChanges === "function") { return !!(a._annotationStorageModified && a._hasChanges()); }
+                  const storage = a.pdfDocument && a.pdfDocument.annotationStorage;
+                  return !!(storage && storage.size > 0);
+                })()
+                """);
+            await Task.Yield();
+            return result == "true";
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { return false; } // Viewer schon weg
     }

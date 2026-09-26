@@ -9,7 +9,9 @@
 #define appVersion GetVersionNumbersString(releaseDir + "\MoziPDF.exe")
 
 [Setup]
-AppId={{3F6C2E8D-9A41-4B57-8C2E-7D15A90B64E3}
+; Neue AppId seit der Umbenennung (26.09.2026): MoziPDF installiert frisch nach {autopf}\MoziPDF; eine alte MozillaPDF-Installation
+; bleibt davon unberührt und wird von Hand deinstalliert (sonst blieben dort EXE und Verknüpfungen mit dem alten Namen liegen).
+AppId={{8B4C1F6E-2D7A-4E3B-9C51-6F0E2A7D9B14}
 AppName={#appName}
 AppVersion={#appVersion}
 AppVerName={#appName} {#appVersion} (64-Bit)

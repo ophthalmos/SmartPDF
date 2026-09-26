@@ -89,6 +89,8 @@ try {
     if (Test-Path $backup) { Remove-Item $backup -Recurse -Force }
     if ($ownZip) { Remove-Item $zip -ErrorAction SilentlyContinue }
     "PDF.js $new nach $Target übernommen. Jetzt neu bauen (dotnet build) und ggf. den Installer neu erzeugen."
+    "Danach prüfen – MoziPDF greift auf PDF.js-Interna zu: Öffnen-Knopf und Strg+O (_openFileInput), Rückfrage beim Schließen mit"
+    "Änderungen (_hasChanges), Strg+H/T/I und Drag & Drop (Element-IDs der Leiste)."
     exit 0
 }
 catch {
