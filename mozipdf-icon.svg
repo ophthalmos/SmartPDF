@@ -1,5 +1,5 @@
-<!-- MozillaPDF-Icon (ab 32 px): Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben. Quelle für make-icon.ps1;
-     „{js}“ (id="js") blendet das Skript unter 48 px aus. Kleine Größen (16–24 px) kommen aus mozillapdf-icon-small.svg. -->
+<!-- MoziPDF-Icon (ab 32 px): Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben. Quelle für make-icon.ps1;
+     „{js}“ (id="js") blendet das Skript unter 48 px aus. Kleine Größen (16–24 px) kommen aus mozipdf-icon-small.svg. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
     <linearGradient id="doc" x1="0" y1="0" x2="0.35" y2="1">

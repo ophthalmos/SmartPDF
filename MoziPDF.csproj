@@ -10,13 +10,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <RootNamespace>MozillaPDF</RootNamespace>
-    <AssemblyName>MozillaPDF</AssemblyName>
-    <ApplicationIcon>MozillaPDF.ico</ApplicationIcon><!-- eigenes Icon (mozillapdf-icon*.svg), gerendert von make-icon.ps1 -->
+    <RootNamespace>MoziPDF</RootNamespace>
+    <AssemblyName>MoziPDF</AssemblyName>
+    <ApplicationIcon>MoziPDF.ico</ApplicationIcon><!-- eigenes Icon (mozipdf-icon*.svg), gerendert von make-icon.ps1 -->
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <FileVersion>1.0.0</FileVersion>
-    <Product>MozillaPDF</Product>
+    <Product>MoziPDF</Product>
     <Authors>Wilhelm Happe</Authors>
     <Description>PDF-Betrachter mit Hervorheben und Anmerkungen auf Basis von PDF.js</Description>
     <SatelliteResourceLanguages>de</SatelliteResourceLanguages>

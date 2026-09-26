@@ -1,4 +1,4 @@
-# MozillaPDF
+# MoziPDF
 
 PDF-Betrachter für Windows auf Basis von [PDF.js](https://github.com/mozilla/pdf.js) im WebView2 – mit dem Annotationseditor von
 PDF.js zum **Hervorheben**, für Freitext, Freihandzeichnungen, Bilder und Unterschriften. Die Anmerkungen werden beim Speichern als
@@ -12,7 +12,7 @@ PDF.js läuft vollständig lokal; das Programm geht nicht ins Netz.
 Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.js bringt alles mit. Fehler meldet ein Dialog.
 
 - **Öffnen:** Strg+O oder „Öffnen“ im Menü „»“ rechts in der Leiste; beides führt zum Öffnen-Dialog der App. Oder die Datei als
-  Aufrufparameter: `MozillaPDF.exe datei.pdf`, oder per Drag & Drop ins Fenster – bei mehreren Dateien öffnet die erste hier, jede
+  Aufrufparameter: `MoziPDF.exe datei.pdf`, oder per Drag & Drop ins Fenster – bei mehreren Dateien öffnet die erste hier, jede
   weitere in einem eigenen Fenster.
 - **Hervorheben:** Marker in der Leiste wählen, Text mit der Maus markieren. Daneben Text, Zeichnen, Bild und Unterschrift.
 - **Eigene Tastaturkürzel:** Strg+H „Hervorheben“ und Strg+T „Text“ – der erste Druck wählt das Werkzeug samt seiner Leiste, der
@@ -26,16 +26,16 @@ Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.j
 - **Programminformationen:** „?“ rechts in der Leiste (vor dem Menü „»“) oder F1 – kurze Beschreibung, Programm- und
   PDF.js-Version, Autor und Lizenz. Ein Fragezeichen in der Titelleiste gibt es bewusst nicht: Windows zeigt es nur ohne Minimieren-
   und Maximieren-Knopf. Wie man eine Datei öffnet, steht auf der leeren Fläche, solange kein Dokument geladen ist.
-- Lage, Größe und Maximiert-Zustand des Fensters merkt `%APPDATA%\MozillaPDF\settings.json`.
+- Lage, Größe und Maximiert-Zustand des Fensters merkt `%APPDATA%\MoziPDF\settings.json`.
 
 Das Programm wird nur auf Deutsch gepflegt (Oberfläche, Installer, PDF.js-Sprache).
 
 ## Bauen
 
 1. `update-pdfjs.ps1` ausführen – lädt die aktuelle PDF.js-Distribution nach `pdfjs\` (Ordner ist git-ignoriert).
-2. `dotnet build MozillaPDF.csproj -c Release -p:Platform=x64` – `pdfjs\` wird neben die EXE kopiert; der Installer nimmt
+2. `dotnet build MoziPDF.csproj -c Release -p:Platform=x64` – `pdfjs\` wird neben die EXE kopiert; der Installer nimmt
    `bin\x64\Release\net10.0-windows`.
-3. Installer: `"C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss` → `MozillaPDFSetup.exe`.
+3. Installer: `"C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss` → `MoziPDFSetup.exe`.
 
 ## PDF.js aktualisieren
 
@@ -52,13 +52,13 @@ entpackt und geprüft ist. Danach neu bauen und den Installer neu erzeugen.
 - `Forms\MainForm` – nur das WebView, keine eigene Symbolleiste und keine Statuszeile. Der Viewer (`pdfjs\web\viewer.html`) läuft unter dem virtuellen Host
   `https://pdfjs.local`; die Datei geht als SharedBuffer an die Seite und von dort per `PDFViewerApplication.open({ data })` an PDF.js.
 - `Classes\AppSettings` – Fensterlage als JSON.
-- `make-icon.ps1` – erzeugt `MozillaPDF.ico` aus `mozillapdf-icon.svg` (ab 32 px, „{js}“ erst ab 48 px) und
-  `mozillapdf-icon-small.svg` (16–24 px); Edge rendert jede Größe einzeln (16 bis 256 px). Bei Änderungen auch das Icon in
+- `make-icon.ps1` – erzeugt `MoziPDF.ico` aus `mozipdf-icon.svg` (ab 32 px, „{js}“ erst ab 48 px) und
+  `mozipdf-icon-small.svg` (16–24 px); Edge rendert jede Größe einzeln (16 bis 256 px). Bei Änderungen auch das Icon in
   `Forms\MainForm.resx` erneuern.
 
 ## Lizenzen
 
-MozillaPDF steht wie PDF.js unter der Apache-Lizenz 2.0 (`LICENSE`, Copyright-Vermerk in `NOTICE`); der Installer zeigt die Lizenz
+MoziPDF steht wie PDF.js unter der Apache-Lizenz 2.0 (`LICENSE`, Copyright-Vermerk in `NOTICE`); der Installer zeigt die Lizenz
 vor der Installation. PDF.js bringt seine Lizenz in `pdfjs\LICENSE` mit. Das Programm-Icon ist eine eigene Gestaltung
 (Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben). „Mozilla“ ist eine Marke der Mozilla Foundation;
-MozillaPDF ist kein Produkt von Mozilla.
+MoziPDF ist kein Produkt von Mozilla.

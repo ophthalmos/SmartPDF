@@ -1,4 +1,4 @@
-﻿# Erzeugt MozillaPDF.ico aus dem eigenen Icon (mozillapdf-icon.svg ab 32 px, mozillapdf-icon-small.svg für 16–24 px; Entwurf vom
+﻿# Erzeugt MoziPDF.ico aus dem eigenen Icon (mozipdf-icon.svg ab 32 px, mozipdf-icon-small.svg für 16–24 px; Entwurf vom
 # 25.09.2026: Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben). Das Element id="js" („{js}“) fehlt unter 48 px – dort wäre
 # es nur Pixelrauschen.
 # Jede Größe wird einzeln von Edge im Headless-Modus aus dem SVG gerendert (transparent) – so bleibt das Icon auch in 16 px scharf,
@@ -7,11 +7,11 @@
 # -Background füllt auf Wunsch die ganze Fläche (z. B. "#FFED99"); Vorgabe ist transparent.
 # Danach das Icon auch in Forms\MainForm.resx ($this.Icon) erneuern.
 param(
-    [string]$Svg = (Join-Path $PSScriptRoot "mozillapdf-icon.svg"),
-    [string]$SmallSvg = (Join-Path $PSScriptRoot "mozillapdf-icon-small.svg"),
+    [string]$Svg = (Join-Path $PSScriptRoot "mozipdf-icon.svg"),
+    [string]$SmallSvg = (Join-Path $PSScriptRoot "mozipdf-icon-small.svg"),
     [int]$SmallMax = 24,
     [int]$JsMin = 48,
-    [string]$Out = (Join-Path $PSScriptRoot "MozillaPDF.ico"),
+    [string]$Out = (Join-Path $PSScriptRoot "MoziPDF.ico"),
     [string]$Preview = "",
     [string]$Background = ""
 )
@@ -20,7 +20,7 @@ Add-Type -AssemblyName System.Drawing
 
 $edge = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe", "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $edge) { throw "Microsoft Edge nicht gefunden – er rendert das SVG." }
-$work = Join-Path $env:TEMP "MozillaPDF-icon"
+$work = Join-Path $env:TEMP "MoziPDF-icon"
 if (Test-Path $work) { Remove-Item $work -Recurse -Force }
 New-Item -ItemType Directory $work | Out-Null
 Copy-Item $Svg (Join-Path $work "logo.svg")

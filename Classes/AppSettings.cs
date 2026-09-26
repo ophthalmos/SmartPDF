@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace MozillaPDF.Classes;
+namespace MoziPDF.Classes;
 
-/// <summary>Einstellungen als JSON unter %APPDATA%\MozillaPDF\settings.json – derzeit nur Lage, Größe und Zustand des Hauptfensters.</summary>
+/// <summary>Einstellungen als JSON unter %APPDATA%\MoziPDF\settings.json – derzeit nur Lage, Größe und Zustand des Hauptfensters.</summary>
 internal sealed class AppSettings
 {
     public int WindowX { get; set; }
@@ -11,7 +11,7 @@ internal sealed class AppSettings
     public int WindowHeight { get; set; }
     public bool WindowMaximized { get; set; }
 
-    public static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MozillaPDF", "settings.json");
+    public static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MoziPDF", "settings.json");
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 

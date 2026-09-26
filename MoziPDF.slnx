@@ -3,7 +3,7 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="MozillaPDF.csproj">
+  <Project Path="MoziPDF.csproj">
     <Platform Solution="Release|*" Project="x64" />
   </Project>
 </Solution>

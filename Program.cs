@@ -1,10 +1,10 @@
-using MozillaPDF.Forms;
+using MoziPDF.Forms;
 
-namespace MozillaPDF;
+namespace MoziPDF;
 
 internal static class Program
 {
-    /// <summary>Aufruf: MozillaPDF [datei.pdf]</summary>
+    /// <summary>Aufruf: MoziPDF [datei.pdf]</summary>
     [STAThread]
     private static void Main(string[] args)
     {

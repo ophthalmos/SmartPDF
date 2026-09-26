@@ -1,4 +1,4 @@
-<!-- MozillaPDF-Icon für 16–24 px (16er-Raster): größeres „PDF“, statt der Ellipse nur ein Bogen. Quelle für make-icon.ps1. -->
+<!-- MoziPDF-Icon für 16–24 px (16er-Raster): größeres „PDF“, statt der Ellipse nur ein Bogen. Quelle für make-icon.ps1. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
   <defs>
     <linearGradient id="doc" x1="0" y1="0" x2="0" y2="1">

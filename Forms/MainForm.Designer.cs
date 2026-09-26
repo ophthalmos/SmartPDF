@@ -1,4 +1,4 @@
-namespace MozillaPDF.Forms
+namespace MoziPDF.Forms
 {
     partial class MainForm
     {
@@ -55,7 +55,7 @@ namespace MozillaPDF.Forms
             MinimumSize = new Size(480, 360);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "MozillaPDF";
+            Text = "MoziPDF";
             HelpButtonClicked += MainForm_HelpButtonClicked;
             FormClosing += MainForm_FormClosing;
             Shown += MainForm_Shown;

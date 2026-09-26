@@ -2,9 +2,9 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Web.WebView2.Core;
-using MozillaPDF.Classes;
+using MoziPDF.Classes;
 
-namespace MozillaPDF.Forms;
+namespace MoziPDF.Forms;
 
 /// <summary>PDF-Betrachter mit Hervorheben und Anmerkungen auf Basis von PDF.js (Mozilla) im WebView2.
 /// <list type="bullet">
@@ -34,7 +34,7 @@ public partial class MainForm : Form
     private const string Host = "pdfjs.local";
     private const string PdfJsWebsite = "https://mozilla.github.io/pdf.js/";
     private readonly string pdfjsFolder = Path.Combine(AppContext.BaseDirectory, "pdfjs");
-    private static readonly string DataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MozillaPDF");
+    private static readonly string DataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MoziPDF");
     private readonly AppSettings settings = AppSettings.Load();
     private string? startFile;   // Datei aus der Befehlszeile, geöffnet sobald der Viewer steht
     private string? currentPath; // angezeigte Datei; Vorgabe für den Speichern-Dialog
@@ -240,8 +240,8 @@ public partial class MainForm : Form
             if (toggle) {
               const help = document.createElement("button");
               help.id = "mozHelpButton"; help.className = "toolbarButton"; help.type = "button"; help.tabIndex = 0;
-              help.title = "Über MozillaPDF (F1)";
-              help.innerHTML = "<span>Über MozillaPDF</span>";
+              help.title = "Über MoziPDF (F1)";
+              help.innerHTML = "<span>Über MoziPDF</span>";
               help.addEventListener("click", () => post({ type: "help" }));
               toggle.parentNode.insertBefore(help, toggle);
             }
@@ -281,7 +281,7 @@ public partial class MainForm : Form
         using (var stream = buffer.OpenStream()) { stream.Write(bytes); }
         core.PostSharedBufferToScript(buffer, CoreWebView2SharedBufferAccess.ReadOnly, JsonSerializer.Serialize(new { fileName = Path.GetFileName(path) }));
         currentPath = path;
-        Text = Path.GetFileName(path) + " – MozillaPDF";
+        Text = Path.GetFileName(path) + " – MoziPDF";
     }
 
     /// <summary>Meldungen des Seitenskripts: opened, error, openRequest (Öffnen-Knopf oder Strg+O im Viewer), help („?“-Knopf oder F1).
@@ -338,7 +338,7 @@ public partial class MainForm : Form
             if (e.DownloadOperation.State == CoreWebView2DownloadState.Completed)
             {
                 currentPath = e.DownloadOperation.ResultFilePath; // „Speichern unter“: Titel und nächster Vorschlag folgen der neuen Datei
-                Text = Path.GetFileName(currentPath) + " – MozillaPDF";
+                Text = Path.GetFileName(currentPath) + " – MoziPDF";
                 if (closeAfterSave) { closeApproved = true; BeginInvoke(Close); } // Speichern kam aus der Rückfrage beim Schließen
             }
             else if (e.DownloadOperation.State == CoreWebView2DownloadState.Interrupted)
@@ -349,12 +349,12 @@ public partial class MainForm : Form
         };
     }
 
-    /// <summary>Abgelegte Dateien öffnen: die erste PDF in diesem Fenster, jede weitere in einem neuen MozillaPDF-Fenster (ein Dokument je
+    /// <summary>Abgelegte Dateien öffnen: die erste PDF in diesem Fenster, jede weitere in einem neuen MoziPDF-Fenster (ein Dokument je
     /// Fenster). Keine PDF dabei: Hinweis.</summary>
     private void OpenDroppedFiles(IReadOnlyList<string> paths)
     {
         var pdfs = paths.Where(p => p.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && File.Exists(p)).ToList();
-        if (pdfs.Count == 0) { ShowError("Keine PDF-Datei", "MozillaPDF öffnet nur PDF-Dateien."); return; }
+        if (pdfs.Count == 0) { ShowError("Keine PDF-Datei", "MoziPDF öffnet nur PDF-Dateien."); return; }
         if (!pageReady) { startFile ??= pdfs[0]; } else { ShowFile(pdfs[0]); }
         foreach (var more in pdfs.Skip(1))
         {
@@ -416,16 +416,18 @@ public partial class MainForm : Form
         using var appIcon = Icon.ExtractIcon(Application.ExecutablePath, 0, LogicalToDeviceUnits(32));
         var page = new TaskDialogPage
         {
-            Caption = "Über MozillaPDF",
-            Heading = "MozillaPDF",
-            Text = $"Ein einfacher PDF-Betrachter auf Basis von <a href=\"{PdfJsWebsite}\">PDF.js</a>."
+            Caption = "Über MoziPDF",
+            Heading = "MoziPDF",
+            Text = $"Ein einfacher PDF-Betrachter auf <a href=\"{PdfJsWebsite}\">PDF.js</a>-Basis."
                  + Environment.NewLine + Environment.NewLine
-                 + "PDF.js arbeitet vollständig offline auf deinem PC.\nPDFs und Daten werden nirgendwohin übertragen.",
+                 + "PDF.js wird im Firefox-Webbrowser verwendet." + Environment.NewLine
+                 + "PDF.js arbeitet vollständig offline und verschickt" + Environment.NewLine
+                 + "keine Daten. MoziPDF ist kein Mozilla-Produkt.",
             Icon = appIcon != null ? new TaskDialogIcon(appIcon) : TaskDialogIcon.Information,
             Footnote = new TaskDialogFootnote
             {
                 Text = $"Version {version}   •   PDF.js {PdfJsVersion() ?? "?"}   •   © 2026 Wilhelm Happe" + Environment.NewLine
-                     + "MozillaPDF und PDF.js stehen unter der <a href=\"apache\">Apache-Lizenz 2.0</a>. MozillaPDF ist kein Produkt von Mozilla.",
+                     + "MoziPDF und PDF.js stehen unter der <a href=\"apache\">Apache-Lizenz 2.0</a>.",
                 Icon = TaskDialogIcon.Information,
             },
             EnableLinks = true,
@@ -473,7 +475,7 @@ public partial class MainForm : Form
     /// <summary>Fehlermeldung – grundsätzlich per BeginInvoke, weil viele Aufrufer in WebView2-Rückrufen sitzen (siehe Klassenkommentar).</summary>
     private void ShowError(string heading, string text) => BeginInvoke(() => TaskDialog.ShowDialog(this, new TaskDialogPage
     {
-        Caption = "MozillaPDF",
+        Caption = "MoziPDF",
         Heading = heading,
         Text = text,
         Icon = TaskDialogIcon.Error,
@@ -529,7 +531,7 @@ public partial class MainForm : Form
         var discard = new TaskDialogButton("Nicht speichern");
         var choice = TaskDialog.ShowDialog(this, new TaskDialogPage
         {
-            Caption = "MozillaPDF",
+            Caption = "MoziPDF",
             Heading = $"Änderungen an „{Path.GetFileName(currentPath)}“ speichern?",
             Text = "Die Hervorhebungen und Anmerkungen gehen sonst verloren.",
             Icon = TaskDialogIcon.Warning,
