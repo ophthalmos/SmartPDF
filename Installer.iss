@@ -39,6 +39,8 @@ CloseApplications=yes
 SetupMutex={#appName}_SetupMutex
 WizardStyle=modern
 UsedUserAreasWarning=no
+; Die Registry-Einträge für „Öffnen mit“ ändern Dateizuordnungen – der Explorer soll sie sofort übernehmen
+ChangesAssociations=yes
 
 [Languages]
 Name: de; MessagesFile: "compiler:Languages\German.isl"
@@ -66,6 +68,21 @@ Type: filesandordirs; Name: "{app}\pdfjs"
 [Icons]
 Name: "{group}\{#appName}"; Filename: "{app}\{#appName}.exe"
 Name: "{autodesktop}\{#appName}"; Filename: "{app}\{#appName}.exe"; Tasks: desktopicon
+
+[Registry]
+; SmartPDF im Explorer unter „Öffnen mit“ für PDF-Dateien anbieten – ohne die Standard-App für PDFs zu ändern (die wählt der
+; Nutzer selbst). HKA = HKLM, da das Setup mit Administratorrechten läuft; das Deinstallieren entfernt alles wieder.
+; 1) Das Programm selbst: Name in der Liste, unterstützter Typ, Öffnen-Befehl
+Root: HKA; Subkey: "Software\Classes\Applications\{#appName}.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#appName}"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Applications\{#appName}.exe\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\{#appName}.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#appName}.exe"" ""%1"""
+; 2) Eigene ProgID mit Symbol und Öffnen-Befehl
+Root: HKA; Subkey: "Software\Classes\{#appName}.pdf"; ValueType: string; ValueName: ""; ValueData: "PDF-Dokument"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\{#appName}.pdf"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "PDF-Dokument"
+Root: HKA; Subkey: "Software\Classes\{#appName}.pdf\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#appName}.exe,0"
+Root: HKA; Subkey: "Software\Classes\{#appName}.pdf\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#appName}.exe"" ""%1"""
+; 3) Als Kandidat für .pdf eintragen – erscheint damit in „Öffnen mit“, ohne Standard zu werden
+Root: HKA; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "{#appName}.pdf"; ValueData: ""; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#appName}.exe"; Description: "{cm:Run}"; Flags: nowait postinstall skipifsilent
