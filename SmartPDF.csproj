@@ -31,7 +31,6 @@
     <!-- Die entpackte PDF.js-Distribution (update-pdfjs.ps1) wandert neben die EXE; das WebView bindet sie als https://pdfjs.local ein. -->
     <None Include="pdfjs\**" CopyToOutputDirectory="PreserveNewest" LinkBase="pdfjs" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" /><!-- Apache-Lizenz 2.0, im Info-Dialog verlinkt -->
-    <None Include="NOTICE" CopyToOutputDirectory="PreserveNewest" />
     <None Include="SmartPDF-Hilfe.pdf" CopyToOutputDirectory="PreserveNewest" /><!-- „?“ und F1; erzeugt von make-help.ps1 aus SmartPDF-Hilfe.html -->
   </ItemGroup>
 

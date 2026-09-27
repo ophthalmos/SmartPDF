@@ -1,74 +1,31 @@
 # SmartPDF
 
-PDF-Betrachter für Windows auf Basis von [PDF.js](https://github.com/mozilla/pdf.js) im WebView2 – mit dem Annotationseditor von
-PDF.js zum **Hervorheben**, für Freitext, Freihandzeichnungen, Bilder und Unterschriften. Die Anmerkungen werden beim Speichern als
-echte PDF-Anmerkungen mit Darstellungsstrom in die Datei geschrieben und sind in anderen Betrachtern sichtbar (geprüft mit dem
-Chromium-Viewer von PDFlight). Gedacht auch als externes Programm für PDFlight („Programme“-Menü).
+A lightweight PDF viewer for Windows, built on Mozilla's [PDF.js](https://github.com/mozilla/pdf.js) and running in WebView2.
+Highlight text, add free text, drawings, images and signatures – annotations are saved into the PDF as standard annotations and
+show up in other viewers as well. Everything runs locally: no uploads, no telemetry.
 
-PDF.js läuft vollständig lokal; das Programm geht nicht ins Netz.
+**The user interface is German only.**
 
-## Bedienen
+## Highlights
 
-Es gibt keine eigene Symbolleiste und keine Statuszeile – die Leiste von PDF.js bringt alles mit. Fehler meldet ein Dialog.
+- Open files with Ctrl+O, by drag & drop or from the command line: `SmartPDF.exe file.pdf`
+- Save with Ctrl+S; SmartPDF asks before closing or switching files with unsaved changes
+- Extra shortcuts: Ctrl+H highlight, Ctrl+T text, Ctrl+G go to page, Ctrl+I document properties, F11 full-screen presentation
+- F1 or the “?” button opens the help (`SmartPDF-Hilfe.pdf`, German) with all keyboard shortcuts
 
-- **Öffnen:** Strg+O oder „Öffnen“ im Menü „»“ rechts in der Leiste; beides führt zum Öffnen-Dialog der App. Oder die Datei als
-  Aufrufparameter: `SmartPDF.exe datei.pdf`, oder per Drag & Drop ins Fenster – bei mehreren Dateien öffnet die erste hier, jede
-  weitere in einem eigenen Fenster.
-- **Hervorheben:** Marker in der Leiste wählen, Text mit der Maus markieren. Daneben Text, Zeichnen, Bild und Unterschrift.
-- **Eigene Tastaturkürzel:** Strg+H „Hervorheben“ und Strg+T „Text“ – der erste Druck wählt das Werkzeug samt seiner Leiste, der
-  zweite schaltet es ab und schließt die Leiste (auch mitten im Tippen). Strg+I öffnet und schließt die Dokumenteigenschaften
-  (sonst am Ende des Menüs „»“). Strg+G springt ins Seitenfeld und
-  markiert die Zahl – Seitenzahl tippen, Enter. „Weitersuchen“ geht dann mit Enter im Suchfeld (Umschalt+Enter oder
-  Strg+Umschalt+G: vorheriger Treffer); F3 kennt PDF.js nicht. F11 schaltet den Präsentationsmodus im Vollbild ein und
-  aus (auch Esc beendet ihn, ebenso erreichbar über das Menü „»“). Die Strg+Alt-Kürzel von PDF.js (Strg+Alt+P, Strg+Alt+G) sind gesperrt – solche Kombinationen bleiben dem System und
-  globalen Tastenkürzeln vorbehalten.
-- **Speichern:** Speichern-Knopf der Leiste oder Strg+S; der Dialog „Dokument speichern“ schlägt die angezeigte Datei
-  selbst vor (Überschreiben mit Rückfrage), ein anderer Name ist möglich – danach zeigt das Fenster die neue Datei.
-- **Schließen** oder **Öffnen einer anderen Datei** mit ungespeicherten Hervorhebungen oder Anmerkungen fragt nach: Speichern,
-  Nicht speichern oder Abbrechen. F5 lädt nichts neu – die Browser-Kürzel von WebView2 sind aus, damit das Dokument nicht aus
-  Versehen verschwindet.
-- **Hilfe:** „?“ rechts in der Leiste (vor dem Menü „»“) oder F1 zeigt `SmartPDF-Hilfe.pdf` aus dem Programmordner –
-  ohne Dokument im selben Fenster, sonst in einem neuen. Die Hilfe fasst Bedienung und Tastenkürzel (PDF.js und SmartPDF) auf
-  einer Seite zusammen.
-- **Programminformationen:** „ⓘ“ neben „?“ – kurze Beschreibung, Programm- und PDF.js-Version, Autor und Lizenz. Ein
-  Fragezeichen in der Titelleiste gibt es bewusst nicht: Windows zeigt es nur ohne Minimieren- und Maximieren-Knopf. Wie man eine
-  Datei öffnet, steht auf der leeren Fläche, solange kein Dokument geladen ist.
-- Lage, Größe und Maximiert-Zustand des Fensters merkt `%APPDATA%\SmartPDF\settings.json`.
+## Requirements
 
-Das Programm wird nur auf Deutsch gepflegt (Oberfläche, Installer, PDF.js-Sprache).
+Windows 10/11 (x64), [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) and the
+[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (preinstalled on Windows 11).
 
-## Bauen
+## Building
 
-1. `update-pdfjs.ps1` ausführen – lädt die aktuelle PDF.js-Distribution nach `pdfjs\` (Ordner ist git-ignoriert).
-2. `dotnet build SmartPDF.csproj -c Release -p:Platform=x64` – `pdfjs\` wird neben die EXE kopiert; der Installer nimmt
-   `bin\x64\Release\net10.0-windows`.
-3. Installer: `"C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss` → `SmartPDFSetup.exe`.
+1. Download `pdfjs-<version>-dist.zip` (not the “legacy” build) from the [PDF.js releases](https://github.com/mozilla/pdf.js/releases)
+   and extract it into a folder `pdfjs\` next to `SmartPDF.csproj`.
+2. `dotnet build SmartPDF.csproj -c Release -p:Platform=x64`
+3. Optional installer: compile `Installer.iss` with [Inno Setup](https://jrsoftware.org/isinfo.php) 7.
 
-## PDF.js aktualisieren
+## License
 
-```
-.\update-pdfjs.ps1 -CheckOnly   # nur prüfen (Exitcode 2 = neuere Version verfügbar)
-.\update-pdfjs.ps1              # prüfen und bei Bedarf ersetzen
-```
-
-Das Skript prüft den Download gegen die SHA-256-Prüfsumme von GitHub und ersetzt den Ordner erst, wenn das neue Archiv vollständig
-entpackt und geprüft ist. Danach neu bauen und den Installer neu erzeugen.
-
-## Aufbau
-
-- `Forms\MainForm` – nur das WebView, keine eigene Symbolleiste und keine Statuszeile. Der Viewer (`pdfjs\web\viewer.html`) läuft unter dem virtuellen Host
-  `https://pdfjs.local`; die Datei geht als SharedBuffer an die Seite und von dort per `PDFViewerApplication.open({ data })` an PDF.js.
-- `Classes\AppSettings` – Fensterlage als JSON.
-- `make-icon.ps1` – erzeugt `SmartPDF.ico` aus `smartpdf-icon.svg` (ab 32 px, „{js}“ erst ab 48 px) und
-  `smartpdf-icon-small.svg` (16–24 px); Edge rendert jede Größe einzeln (16 bis 256 px). Bei Änderungen auch das Icon in
-  `Forms\MainForm.resx` erneuern.
-- `SmartPDF-Hilfe.html` – Quelle der Hilfe; `make-help.ps1` lässt Edge sie als `SmartPDF-Hilfe.pdf` drucken (A4, eine Seite). Die
-  PDF ist eingecheckt, der Build kopiert sie neben die EXE. Nach Änderungen an der HTML-Datei oder nach einem PDF.js-Update mit
-  geänderten Kürzeln neu erzeugen.
-
-## Lizenzen
-
-SmartPDF steht wie PDF.js unter der Apache-Lizenz 2.0 (`LICENSE`, Copyright-Vermerk in `NOTICE`); der Installer zeigt die Lizenz
-vor der Installation. PDF.js bringt seine Lizenz in `pdfjs\LICENSE` mit. Das Programm-Icon ist eine eigene Gestaltung
-(Blatt in Mozilla-Blau, Band in den Firefox-Verlaufsfarben). „Mozilla“ ist eine Marke der Mozilla Foundation;
-SmartPDF ist kein Produkt von Mozilla.
+SmartPDF is licensed under the Apache License 2.0 (see `LICENSE`). PDF.js is © Mozilla and the PDF.js contributors, also under the
+Apache License 2.0. SmartPDF is not a Mozilla product; “Mozilla” is a trademark of the Mozilla Foundation.

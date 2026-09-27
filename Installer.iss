@@ -55,7 +55,7 @@ de.WebView2Missing=Die Microsoft-WebView2-Runtime wurde nicht gefunden.%n%n{#app
 Name: desktopicon; Description: "{cm:DesktopIcon}"; Flags: unchecked
 
 [Files]
-; Programm samt LICENSE und NOTICE (Apache 2.0) und PDF.js-Ordner (pdfjs\, mit dessen LICENSE); Quelltext-Karten (*.map) und
+; Programm samt LICENSE (Apache 2.0), Hilfe-PDF und PDF.js-Ordner (pdfjs\, mit dessen LICENSE); Quelltext-Karten (*.map) und
 ; Debug-Symbole bleiben draußen
 Source: "{#releaseDir}\*"; Excludes: "*.pdb,*.map"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 

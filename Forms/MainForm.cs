@@ -96,7 +96,7 @@ public partial class MainForm : Form
         {
             ShowError("PDF.js-Distribution nicht gefunden",
                 "Erwartet wird der Ordner „pdfjs“ (mit web\\viewer.html und build\\pdf.mjs) neben der EXE." + Environment.NewLine
-                + "Das Skript update-pdfjs.ps1 im Projektordner lädt die aktuelle Version von GitHub; danach neu bauen.");
+                + "Die Distribution (pdfjs-<version>-dist.zip) gibt es unter github.com/mozilla/pdf.js/releases; in den Ordner „pdfjs“ entpacken und neu bauen.");
             return;
         }
         try
