@@ -1,9 +1,0 @@
-SmartPDF
-Copyright 2026 Wilhelm Happe
-
-Lizenziert unter der Apache-Lizenz, Version 2.0 (siehe LICENSE).
-
-Enthält PDF.js (https://github.com/mozilla/pdf.js), Copyright Mozilla und die PDF.js-Mitwirkenden,
-ebenfalls lizenziert unter der Apache-Lizenz, Version 2.0 (siehe pdfjs\LICENSE). Das Programmsymbol ist eine
-eigene Gestaltung. „Mozilla“ ist eine Marke der Mozilla Foundation; SmartPDF ist kein
-Produkt von Mozilla.
