@@ -13,3 +13,9 @@ SmartPDFSetup.exe
 
 # Persönliche Claude-Anweisungen (nicht einchecken)
 CLAUDE.local.md
+/SmartPDF-Hilfe.html
+/smartpdf-icon.svg
+/smartpdf-icon-small.svg
+/update-pdfjs.ps1
+/make-help.ps1
+/make-icon.ps1
