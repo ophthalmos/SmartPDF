@@ -1,10 +1,10 @@
-using MoziPDF.Forms;
+using SmartPDF.Forms;
 
-namespace MoziPDF;
+namespace SmartPDF;
 
 internal static class Program
 {
-    /// <summary>Aufruf: MoziPDF [datei.pdf]</summary>
+    /// <summary>Aufruf: SmartPDF [datei.pdf]</summary>
     [STAThread]
     private static void Main(string[] args)
     {

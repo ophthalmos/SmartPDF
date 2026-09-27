@@ -1,4 +1,4 @@
-namespace MoziPDF.Forms
+namespace SmartPDF.Forms
 {
     partial class MainForm
     {
@@ -55,7 +55,7 @@ namespace MoziPDF.Forms
             MinimumSize = new Size(480, 360);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "MoziPDF";
+            Text = "SmartPDF";
             HelpButtonClicked += MainForm_HelpButtonClicked;
             FormClosing += MainForm_FormClosing;
             Shown += MainForm_Shown;

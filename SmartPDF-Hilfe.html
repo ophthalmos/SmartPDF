@@ -1,0 +1,134 @@
+<!doctype html>
+<!-- Quelle der Hilfedatei SmartPDF-Hilfe.pdf („?“ und F1 im Programm). Nach Änderungen make-help.ps1 ausführen – Edge druckt diese
+     Seite als PDF; die PDF wird eingecheckt und liegt neben der EXE. Tastenkürzel geprüft gegen PDF.js 6.3.289 (web/viewer.mjs,
+     onKeyDown; Editor: build/pdf.mjs, _keyboardManager) und das Seitenskript in Forms/MainForm.cs. -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>SmartPDF – Hilfe</title>
+<style>
+  @page { size: A4; margin: 15mm 17mm 13mm; }
+  :root { --accent: #0060DF; --muted: #5a5a5a; --rule: #c9d3de; --key-bg: #eef3f9; --key-border: #b9c7d8; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font: 9.6pt/1.38 "Segoe UI", sans-serif; color: #1a1a1a; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12pt; }
+  header img { width: 64pt; height: 64pt; flex: none; margin-top: -4pt; }
+  h1 { font-size: 19pt; margin: 0 0 2pt; }
+  .sub { color: var(--muted); margin: 0; }
+  h2 { font-size: 11.5pt; color: var(--accent); margin: 10pt 0 5pt; padding-bottom: 2pt; border-bottom: 1px solid var(--rule); }
+  h3 { font-size: 9.8pt; margin: 0 0 3pt; }
+  p, ul { margin: 0 0 5pt; }
+  ul { padding-left: 13pt; }
+  li { margin-bottom: 2.5pt; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18pt; row-gap: 7pt; }
+  table { border-collapse: collapse; width: 100%; }
+  td { padding: 1.4pt 0; vertical-align: top; }
+  td:first-child { width: 1%; padding-right: 9pt; white-space: nowrap; }
+  kbd { display: inline-block; font: 600 8.4pt/1.25 "Segoe UI", sans-serif; padding: 0 3.5pt; min-width: 11pt; text-align: center;
+        background: var(--key-bg); border: 1px solid var(--key-border); border-radius: 3pt; }
+  .or { color: var(--muted); font-size: 8.5pt; padding: 0 1pt; }
+  .note { color: var(--muted); font-size: 8.6pt; margin-top: 3pt; }
+  .own { color: var(--accent); font-weight: 600; }
+  footer { margin-top: 12pt; padding-top: 5pt; border-top: 1px solid var(--rule); color: var(--muted); font-size: 8.4pt; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>SmartPDF – Hilfe</h1>
+    <p class="sub">PDF-Betrachter mit Hervorheben und Anmerkungen auf Basis von PDF.js. Alles bleibt auf deinem Rechner –
+      SmartPDF lädt nichts hoch und verschickt keine Daten.</p>
+  </div>
+  <img src="smartpdf-icon.svg" alt="">
+</header>
+
+<h2>Öffnen, speichern, schließen</h2>
+<ul>
+  <li><b>Öffnen:</b> <kbd>Strg</kbd>+<kbd>O</kbd>, „Öffnen“ im Menü <b>»</b> rechts oben oder eine Datei ins Fenster ziehen. Ziehst du
+    mehrere Dateien hinein, öffnet jede weitere in einem eigenen Fenster.</li>
+  <li><b>Bearbeiten:</b> Die Knöpfe rechts in der Leiste fügen Hervorhebungen, Text, Zeichnungen, Bilder und Unterschriften ein.</li>
+  <li><b>Speichern:</b> <kbd>Strg</kbd>+<kbd>S</kbd> oder der Speichern-Knopf. Vorgeschlagen wird die angezeigte Datei selbst; mit
+    einem anderen Namen entsteht eine Kopie, die das Fenster danach zeigt. Die Anmerkungen landen als echte PDF-Anmerkungen in der
+    Datei und sind auch in anderen Programmen zu sehen.</li>
+  <li><b>Schließen oder andere Datei öffnen:</b> Gibt es ungespeicherte Änderungen, fragt SmartPDF nach – Speichern, Nicht speichern
+    oder Abbrechen.</li>
+</ul>
+
+<h2>Tastenkürzel</h2>
+<div class="grid">
+  <section>
+    <h3>Datei</h3>
+    <table>
+      <tr><td><kbd>Strg</kbd>+<kbd>O</kbd></td><td>Datei öffnen</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>S</kbd></td><td>Dokument speichern</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>P</kbd></td><td>Dokument drucken</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>I</kbd></td><td class="own">Dokumenteigenschaften ein/aus</td></tr>
+      <tr><td><kbd>F1</kbd></td><td class="own">diese Hilfe</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>Blättern</h3>
+    <table>
+      <tr><td><kbd>N</kbd> <span class="or">oder</span> <kbd>J</kbd></td><td>nächste Seite</td></tr>
+      <tr><td><kbd>P</kbd> <span class="or">oder</span> <kbd>K</kbd></td><td>vorherige Seite</td></tr>
+      <tr><td><kbd>Pos1</kbd> / <kbd>Ende</kbd></td><td>erste / letzte Seite</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>G</kbd></td><td class="own">Seitennummer eingeben, dann <kbd>Enter</kbd></td></tr>
+      <tr><td><kbd>Bild↑</kbd> / <kbd>Bild↓</kbd></td><td>blättern (bei „Seitengröße“ seitenweise)</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>Zoom und Ansicht</h3>
+    <table>
+      <tr><td><kbd>Strg</kbd>+<kbd>+</kbd> / <kbd>Strg</kbd>+<kbd>−</kbd></td><td>vergrößern / verkleinern</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>0</kbd></td><td>„Automatischer Zoom“</td></tr>
+      <tr><td><kbd>Strg</kbd>+Mausrad</td><td>stufenlos zoomen</td></tr>
+      <tr><td><kbd>R</kbd> / <kbd>Umschalt</kbd>+<kbd>R</kbd></td><td>Ansicht drehen (↻ / ↺)</td></tr>
+      <tr><td><kbd>F4</kbd></td><td>Seitenleiste ein/aus</td></tr>
+      <tr><td><kbd>F11</kbd></td><td class="own">Präsentation im Vollbild ein/aus</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>Werkzeuge</h3>
+    <table>
+      <tr><td><kbd>Strg</kbd>+<kbd>H</kbd></td><td class="own">Hervorheben ein/aus</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>T</kbd></td><td class="own">Text einfügen ein/aus</td></tr>
+      <tr><td><kbd>H</kbd></td><td>Hand-Werkzeug (Seite ziehen)</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Textauswahl-Werkzeug</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>Suchen</h3>
+    <table>
+      <tr><td><kbd>Strg</kbd>+<kbd>F</kbd></td><td>Suchleiste öffnen</td></tr>
+      <tr><td><kbd>Enter</kbd> / <kbd>Umschalt</kbd>+<kbd>Enter</kbd></td><td>Treffer vor / zurück</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>Umschalt</kbd>+<kbd>G</kbd></td><td>vorheriger Treffer</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Suchleiste schließen</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>Anmerkungen bearbeiten</h3>
+    <table>
+      <tr><td><kbd>Strg</kbd>+<kbd>Z</kbd> / <kbd>Strg</kbd>+<kbd>Y</kbd></td><td>rückgängig / wiederholen</td></tr>
+      <tr><td><kbd>Entf</kbd></td><td>gewählte Anmerkung löschen</td></tr>
+      <tr><td>Pfeiltasten</td><td>Anmerkung verschieben</td></tr>
+      <tr><td><kbd>Strg</kbd>+<kbd>A</kbd></td><td>alle Anmerkungen wählen</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Auswahl / Eingabe beenden</td></tr>
+    </table>
+  </section>
+</div>
+<p class="note">Buchstaben-Kürzel ohne <kbd>Strg</kbd> wirken nur, solange kein Eingabefeld den Fokus hat. Die Anmerkungs-Kürzel gelten,
+  während ein Werkzeug (Hervorheben, Text, Zeichnen …) aktiv ist. <span class="own">Blau</span>: Kürzel von SmartPDF, alle übrigen
+  stammen von PDF.js.</p>
+
+<h2>Programm</h2>
+<ul>
+  <li><b>?</b> rechts in der Leiste oder <kbd>F1</kbd> zeigt diese Hilfe, <b>ⓘ</b> daneben Version, PDF.js-Version und Lizenz.</li>
+  <li>Aufruf mit Datei: <code>SmartPDF.exe datei.pdf</code> – so lässt sich SmartPDF auch als externes Programm einbinden, etwa in
+    PDFlight.</li>
+</ul>
+
+<footer>© 2026 W. Happe · SmartPDF und PDF.js stehen unter der Apache-Lizenz 2.0 · PDF.js © Mozilla und die PDF.js-Mitwirkenden ·
+  SmartPDF ist kein Mozilla-Produkt.</footer>
+</body>
+</html>

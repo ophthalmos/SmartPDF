@@ -1,17 +1,18 @@
 ﻿; ============================================================================
-; MoziPDF – Installer (Inno Setup 7)
-; Vorher: Release bauen (dotnet build MoziPDF.csproj -c Release -p:Platform=x64), dann dieses Skript mit
-; "C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss kompilieren. Ergebnis: MoziPDFSetup.exe im Projektordner.
+; SmartPDF – Installer (Inno Setup 7)
+; Vorher: Release bauen (dotnet build SmartPDF.csproj -c Release -p:Platform=x64), dann dieses Skript mit
+; "C:\Program Files\Inno Setup 7\ISCC.exe" Installer.iss kompilieren. Ergebnis: SmartPDFSetup.exe im Projektordner.
 ; ============================================================================
 
-#define appName "MoziPDF"
+#define appName "SmartPDF"
 #define releaseDir "bin\x64\Release\net10.0-windows"
-#define appVersion GetVersionNumbersString(releaseDir + "\MoziPDF.exe")
+#define appVersion GetVersionNumbersString(releaseDir + "\SmartPDF.exe")
 
 [Setup]
-; Neue AppId seit der Umbenennung (26.09.2026): MoziPDF installiert frisch nach {autopf}\MoziPDF; eine alte MozillaPDF-Installation
-; bleibt davon unberührt und wird von Hand deinstalliert (sonst blieben dort EXE und Verknüpfungen mit dem alten Namen liegen).
-AppId={{8B4C1F6E-2D7A-4E3B-9C51-6F0E2A7D9B14}
+; Neue AppId seit der Umbenennung in SmartPDF (27.09.2026): SmartPDF installiert frisch nach {autopf}\SmartPDF; eine
+; Installation unter einem früheren Programmnamen bleibt davon unberührt und wird von Hand deinstalliert (mit derselben AppId
+; landete das Update wegen UsePreviousAppDir im alten Ordner, samt EXE und Verknüpfungen unter dem alten Namen).
+AppId={{AD277654-32CC-46ED-990F-0D8F1DC5E513}
 AppName={#appName}
 AppVersion={#appVersion}
 AppVerName={#appName} {#appVersion} (64-Bit)
@@ -27,7 +28,7 @@ DefaultGroupName={#appName}
 DisableWelcomePage=yes
 DisableReadyPage=yes
 DisableProgramGroupPage=yes
-SetupIconFile=MoziPDF.ico
+SetupIconFile=SmartPDF.ico
 UninstallDisplayIcon={app}\{#appName}.exe
 OutputDir=.
 OutputBaseFilename={#appName}Setup

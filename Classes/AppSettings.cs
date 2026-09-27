@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace MoziPDF.Classes;
+namespace SmartPDF.Classes;
 
-/// <summary>Einstellungen als JSON unter %APPDATA%\MoziPDF\settings.json – derzeit nur Lage, Größe und Zustand des Hauptfensters.</summary>
+/// <summary>Einstellungen als JSON unter %APPDATA%\SmartPDF\settings.json – derzeit nur Lage, Größe und Zustand des Hauptfensters.</summary>
 internal sealed class AppSettings
 {
     public int WindowX { get; set; }
@@ -11,7 +11,7 @@ internal sealed class AppSettings
     public int WindowHeight { get; set; }
     public bool WindowMaximized { get; set; }
 
-    public static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MoziPDF", "settings.json");
+    public static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SmartPDF", "settings.json");
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 

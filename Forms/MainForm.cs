@@ -2,9 +2,9 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Web.WebView2.Core;
-using MoziPDF.Classes;
+using SmartPDF.Classes;
 
-namespace MoziPDF.Forms;
+namespace SmartPDF.Forms;
 
 /// <summary>PDF-Betrachter mit Hervorheben und Anmerkungen auf Basis von PDF.js (Mozilla) im WebView2.
 /// <list type="bullet">
@@ -15,7 +15,8 @@ namespace MoziPDF.Forms;
 /// schreibgeschützt sein (Installation unter „Programme“).</item>
 /// <item>Keine eigene Symbolleiste und keine Statuszeile: Die Leiste von PDF.js bringt alles mit. Das Seitenskript leitet nur das
 /// Öffnen (Knopf im Menü „»“, Strg+O) auf den Öffnen-Dialog der App um, weil die App den Pfad fürs Speichern kennen muss, und ergänzt
-/// einen „?“-Knopf samt F1 für die Programminformationen (<see cref="ShowHelp"/>). Fehler meldet ein Dialog.</item>
+/// einen „?“-Knopf samt F1 für die Hilfe-PDF (<see cref="ShowHelp"/>) und einen „i“-Knopf für die Programminformationen
+/// (<see cref="ShowAbout"/>). Fehler meldet ein Dialog.</item>
 /// <item>Speichern (Speichern-Knopf der Leiste, Strg+S) bettet die Hervorhebungen ein und löst einen Download aus; das WebView fängt ihn
 /// ab und schreibt ihn dorthin, wo der Speichern-Dialog es will. Beim Schließen und vor dem Öffnen einer anderen Datei fragt die App bei
 /// ungespeicherten Änderungen nach (Speichern / Nicht speichern / Abbrechen); „Speichern“ löst den Download des Viewers aus und wartet
@@ -39,7 +40,7 @@ public partial class MainForm : Form
     private const string Host = "pdfjs.local";
     private const string PdfJsWebsite = "https://mozilla.github.io/pdf.js/";
     private readonly string pdfjsFolder = Path.Combine(AppContext.BaseDirectory, "pdfjs");
-    private static readonly string DataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MoziPDF");
+    private static readonly string DataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartPDF");
     private readonly AppSettings settings = AppSettings.Load();
     private string? startFile;   // Datei aus der Befehlszeile, geöffnet sobald der Viewer steht
     private string? currentPath; // angezeigte Datei; Vorgabe für den Speichern-Dialog
@@ -80,8 +81,10 @@ public partial class MainForm : Form
     private void SaveWindowBounds()
     {
         var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds; // maximiert/minimiert: die normale Lage merken
+        var maximized = WindowState == FormWindowState.Maximized;
+        if (beforeFullScreen is { } before) { (bounds, maximized) = (before.Bounds, before.State == FormWindowState.Maximized); } // Schließen im Präsentationsmodus
         (settings.WindowX, settings.WindowY, settings.WindowWidth, settings.WindowHeight) = (bounds.X, bounds.Y, bounds.Width, bounds.Height);
-        settings.WindowMaximized = WindowState == FormWindowState.Maximized;
+        settings.WindowMaximized = maximized;
         settings.Save();
     }
 
@@ -123,6 +126,7 @@ public partial class MainForm : Form
         core.WebMessageReceived += Core_WebMessageReceived;
         core.NewWindowRequested += Core_NewWindowRequested;
         core.NavigationStarting += Core_NavigationStarting;
+        core.ContainsFullScreenElementChanged += Core_ContainsFullScreenElementChanged;
         await core.AddScriptToExecuteOnDocumentCreatedAsync(PageScript);
         core.Navigate($"https://{Host}/web/viewer.html?file="); // leer: der Viewer startet ohne Dokument (sonst zeigt er sein Beispiel)
     }
@@ -132,10 +136,10 @@ public partial class MainForm : Form
     /// <item>nimmt die Datei als SharedBuffer entgegen, übergibt sie an PDF.js und meldet „opened“ bzw. „error“;</item>
     /// <item>ersetzt die unsichtbare Dateiauswahl des Viewers (<c>_openFileInput</c>): Öffnen-Knopf im Menü „»“ und Strg+O rufen beide nur
     /// deren click() auf (onOpenFile, PDF.js 6.3) – statt des Browser-Dialogs kommt „openRequest“ an die App;</item>
-    /// <item>setzt vor das Menü „»“ einen „?“-Knopf im Stil der Leiste (Symbol als CSS-Maske wie die übrigen Knöpfe) und fängt F1 ab –
-    /// beides meldet „help“;</item>
+    /// <item>setzt vor das Menü „»“ einen „?“- und einen „i“-Knopf im Stil der Leiste (Symbole als CSS-Maske wie die übrigen Knöpfe) und
+    /// fängt F1 ab – „?“ und F1 melden „help“, „i“ meldet „about“;</item>
     /// <item>eigene Kürzel: Strg+H „Hervorheben“, Strg+T „Text“ und Strg+I „Dokumenteigenschaften“ als Umschalter, Strg+G springt ins
-    /// Seitenfeld;</item>
+    /// Seitenfeld, F11 schaltet den Präsentationsmodus ein und aus; die Strg+Alt-Kürzel von PDF.js (P, G) sind gesperrt;</item>
     /// <item>zeigt auf der leeren Fläche, wie man eine Datei öffnet, und sperrt Speichern und Drucken (Knöpfe, Strg+S, Strg+P), bis das
     /// erste Dokument steht;</item>
     /// <item>fängt abgelegte Dateien in der Einfangphase ab (vor dem eigenen Drop von PDF.js, der den Pfad verlöre), zeigt beim Ziehen
@@ -149,7 +153,7 @@ public partial class MainForm : Form
             const wait = () => window.PDFViewerApplication ? resolve(window.PDFViewerApplication) : setTimeout(wait, 20);
             wait();
           });
-          const hideHint = () => document.getElementById("mozEmptyHint")?.remove();
+          const hideHint = () => document.getElementById("spEmptyHint")?.remove();
           // Speichern und Drucken ohne Dokument laufen in PDF.js in einen Fehler, nachdem es die Klasse „wait“ gesetzt hat – deren
           // unsichtbare Fläche mit Eieruhr über dem ganzen Fenster bliebe stehen und nähme jeden Klick (Fehlerbericht 25.09.2026).
           // Deshalb sind beide gesperrt, bis das erste Dokument steht.
@@ -189,12 +193,12 @@ public partial class MainForm : Form
           // meldet kein dragleave; beim Stillhalten wiederholt Chromium dragover laufend, dort erlischt der Rahmen also nicht).
           let dragTimer = 0;
           const hasFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
-          const endDrag = () => { clearTimeout(dragTimer); document.body.classList.remove("mozDrop"); };
+          const endDrag = () => { clearTimeout(dragTimer); document.body.classList.remove("spDrop"); };
           window.addEventListener("dragover", e => {
             if (!hasFiles(e)) { return; }
             e.preventDefault(); e.stopImmediatePropagation();
             e.dataTransfer.dropEffect = "copy";
-            document.body.classList.add("mozDrop");
+            document.body.classList.add("spDrop");
             clearTimeout(dragTimer); dragTimer = setTimeout(endDrag, 1000);
           }, true);
           window.addEventListener("dragleave", e => {
@@ -214,10 +218,22 @@ public partial class MainForm : Form
             // Eigene Kürzel (Wunsch vom 25.09.2026): Strg+H „Hervorheben“, Strg+T „Text“ – wie ein Klick auf den Knopf, also als Umschalter:
             // der erste Druck wählt das Werkzeug samt seiner Leiste, der zweite schaltet es ab und schließt die Leiste (PDF.js schaltet beim
             // Klick auf den aktiven Knopf zurück auf „kein Werkzeug“). Strg+G springt ins Seitenfeld und markiert die Zahl; es ersetzt
-            // damit „Weitersuchen“ von PDF.js – das bleibt über F3, Enter im Suchfeld und Strg+Umschalt+G erreichbar.
+            // damit „Weitersuchen“ von PDF.js – das bleibt über Enter im Suchfeld erreichbar (Umschalt+Enter und Strg+Umschalt+G:
+            // vorheriger Treffer). F3 kennt PDF.js nicht (geprüft 27.09.2026).
             const plainCtrl = e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey;
             const tools = { h: "editorHighlightButton", t: "editorFreeTextButton" };
             const key = e.key.toLowerCase();
+            // Strg+Alt-Kombinationen gehören dem System und globalen Tastenkürzeln, nicht einem einzelnen Programm (Wunsch vom 27.09.2026 –
+            // auf Wilhelms Rechner startet Strg+Alt+P Photoshop Elements). Die beiden von PDF.js sind deshalb gesperrt: Strg+Alt+P
+            // (Präsentationsmodus, jetzt F11) und Strg+Alt+G (Seitenfeld, das macht Strg+G).
+            if (e.ctrlKey && e.altKey && !e.metaKey && (key === "p" || key === "g")) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+            if (e.key === "F11" && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) { // Präsentationsmodus im Vollbild, als Umschalter
+              e.preventDefault(); e.stopImmediatePropagation();
+              const viewer = window.PDFViewerApplication;
+              if (document.fullscreenElement) { document.exitFullscreen(); } // auch Esc beendet ihn
+              else if (hasDocument) { viewer?.requestPresentationMode(); } // die App vergrößert das Fenster (ContainsFullScreenElementChanged)
+              return;
+            }
             if (plainCtrl && (key in tools || key === "g" || key === "i")) {
               e.preventDefault(); e.stopImmediatePropagation();
               if (!hasDocument) { return; }
@@ -242,31 +258,37 @@ public partial class MainForm : Form
             post({ type: "help" });
           }, true);
           document.addEventListener("DOMContentLoaded", () => {
-            const icon = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.9' fill='none' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M6 6.3a2 2 0 1 1 2.9 1.8c-.6.3-.9.8-.9 1.4v.4' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='11.7' r='.85'/%3E%3C/svg%3E")`;
+            const svg = body => `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.9' fill='none' stroke='black' stroke-width='1.2'/%3E${body}%3C/svg%3E")`;
+            const helpIcon = svg("%3Cpath d='M6 6.3a2 2 0 1 1 2.9 1.8c-.6.3-.9.8-.9 1.4v.4' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='11.7' r='.85'/%3E");
+            const infoIcon = svg("%3Ccircle cx='8' cy='4.9' r='.9'/%3E%3Cpath d='M8 7.3v4.4' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E");
             // Die Content-Security-Policy des Viewers (style-src 'self') sperrt eingefügte <style>-Elemente; ein per Skript erzeugtes
             // Stylesheet (CSSOM) ist davon nicht betroffen, Daten-URLs für Bilder erlaubt sie (img-src data:).
             const sheet = new CSSStyleSheet();
-            sheet.replaceSync(`#mozHelpButton::before { -webkit-mask-image: ${icon}; mask-image: ${icon}; }
-              #mozEmptyHint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+            sheet.replaceSync(`#spHelpButton::before { -webkit-mask-image: ${helpIcon}; mask-image: ${helpIcon}; }
+              #spInfoButton::before { -webkit-mask-image: ${infoIcon}; mask-image: ${infoIcon}; }
+              #spEmptyHint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
                 pointer-events: none; font: message-box; font-size: 15px; line-height: 1.6; color: var(--main-color); opacity: .75; }
-              body.mozDrop::after { content: ""; position: fixed; inset: calc(var(--toolbar-height) + 8px) 8px 8px; z-index: 100000;
+              body.spDrop::after { content: ""; position: fixed; inset: calc(var(--toolbar-height) + 8px) 8px 8px; z-index: 100000;
                 border: 3px dashed #7aa7d4; border-radius: 6px; pointer-events: none; }`);
             document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
             if (!hasDocument) { enableOutput(false); }
             const toggle = document.getElementById("secondaryToolbarToggle");
-            if (toggle) {
-              const help = document.createElement("button");
-              help.id = "mozHelpButton"; help.className = "toolbarButton"; help.type = "button"; help.tabIndex = 0;
-              help.title = "Über MoziPDF (F1)";
-              help.innerHTML = "<span>Über MoziPDF</span>";
-              help.addEventListener("click", () => post({ type: "help" }));
-              toggle.parentNode.insertBefore(help, toggle);
+            if (toggle) { // vor dem Menü „»“: „?“ (Hilfe-PDF, F1) und „i“ (Über SmartPDF)
+              const button = (id, title, label, type) => {
+                const b = document.createElement("button");
+                b.id = id; b.className = "toolbarButton"; b.type = "button"; b.tabIndex = 0; b.title = title;
+                b.innerHTML = `<span>${label}</span>`;
+                b.addEventListener("click", () => post({ type }));
+                toggle.parentNode.insertBefore(b, toggle);
+              };
+              button("spHelpButton", "Hilfe (F1)", "Hilfe", "help");
+              button("spInfoButton", "Über SmartPDF", "Über SmartPDF", "about");
             }
             const container = document.getElementById("viewerContainer");
             if (container) {
               const hint = document.createElement("div");
-              hint.id = "mozEmptyHint";
-              hint.innerHTML = "<div><b>Kein Dokument geöffnet</b><br>Öffnen mit Strg+O, im Menü » rechts oben oder per Drag &amp; Drop<br>Programminformationen mit F1 oder ?</div>";
+              hint.id = "spEmptyHint";
+              hint.innerHTML = "<div><b>Kein Dokument geöffnet</b><br>Öffnen mit Strg+O, im Menü » rechts oben oder per Drag &amp; Drop<br>Hilfe mit F1 oder ?, Programminformationen mit ⓘ</div>";
               container.parentNode.appendChild(hint);
             }
           });
@@ -286,6 +308,34 @@ public partial class MainForm : Form
         if (startFile != null) { var file = startFile; startFile = null; BeginInvoke(() => ShowFile(file)); }
     }
 
+    // ==== Präsentationsmodus im Vollbild
+
+    private (FormWindowState State, Rectangle Bounds)? beforeFullScreen; // Lage vor dem Vollbild, null = kein Vollbild
+
+    /// <summary>Der Präsentationsmodus von PDF.js (F11, Menü „»“) fordert per Fullscreen-API Vollbild an; WebView2 füllt damit von sich aus
+    /// nur sein eigenes Fenster. Deshalb wird das Hauptfenster randlos über den ganzen Bildschirm gelegt, auf dem es steht (Wunsch vom
+    /// 27.09.2026), und beim Verlassen (Esc, F11) mit Rahmen, Lage und Maximiert-Zustand wiederhergestellt. Maximiert muss vorher auf
+    /// Normal, sonst ließe Windows die Taskleiste frei.</summary>
+    private void Core_ContainsFullScreenElementChanged(object? sender, object e)
+    {
+        if (webView.CoreWebView2.ContainsFullScreenElement)
+        {
+            if (beforeFullScreen != null) { return; }
+            beforeFullScreen = (WindowState, WindowState == FormWindowState.Normal ? Bounds : RestoreBounds);
+            var screen = Screen.FromControl(this).Bounds;
+            WindowState = FormWindowState.Normal;
+            FormBorderStyle = FormBorderStyle.None;
+            Bounds = screen;
+        }
+        else if (beforeFullScreen is { } before)
+        {
+            beforeFullScreen = null;
+            FormBorderStyle = FormBorderStyle.Sizable;
+            Bounds = before.Bounds;
+            WindowState = before.State == FormWindowState.Maximized ? FormWindowState.Maximized : FormWindowState.Normal;
+        }
+    }
+
     // ==== Datei anzeigen und speichern
 
     /// <summary>Datei als SharedBuffer an die Viewer-Seite schicken; das Seitenskript übergibt sie an PDF.js.</summary>
@@ -303,10 +353,10 @@ public partial class MainForm : Form
         using (var stream = buffer.OpenStream()) { stream.Write(bytes); }
         core.PostSharedBufferToScript(buffer, CoreWebView2SharedBufferAccess.ReadOnly, JsonSerializer.Serialize(new { fileName = Path.GetFileName(path) }));
         currentPath = path;
-        Text = Path.GetFileName(path) + " – MoziPDF";
+        Text = Path.GetFileName(path) + " – SmartPDF";
     }
 
-    /// <summary>Meldungen des Seitenskripts: opened, error, openRequest (Öffnen-Knopf oder Strg+O im Viewer), help („?“-Knopf oder F1).
+    /// <summary>Meldungen des Seitenskripts: opened, error, openRequest (Öffnen-Knopf oder Strg+O im Viewer), help („?“-Knopf oder F1), about („i“-Knopf).
     /// Dialoge erst nach dem Nachrichten-Callback zeigen (BeginInvoke).</summary>
     private void Core_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
@@ -324,6 +374,7 @@ public partial class MainForm : Form
             case "opened": FocusViewer(); break;
             case "openRequest": BeginInvoke(OpenFile); break;
             case "help": BeginInvoke(ShowHelp); break;
+            case "about": BeginInvoke(ShowAbout); break;
             case "error":
                 var text = root.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
                 ShowError($"„{Path.GetFileName(currentPath)}“ konnte nicht angezeigt werden", text);
@@ -360,7 +411,7 @@ public partial class MainForm : Form
             if (e.DownloadOperation.State == CoreWebView2DownloadState.Completed)
             {
                 currentPath = e.DownloadOperation.ResultFilePath; // „Speichern unter“: Titel und nächster Vorschlag folgen der neuen Datei
-                Text = Path.GetFileName(currentPath) + " – MoziPDF";
+                Text = Path.GetFileName(currentPath) + " – SmartPDF";
                 FinishSave(true);
             }
             else if (e.DownloadOperation.State == CoreWebView2DownloadState.Interrupted)
@@ -399,7 +450,7 @@ public partial class MainForm : Form
         var discard = new TaskDialogButton("Nicht speichern");
         var choice = TaskDialog.ShowDialog(this, new TaskDialogPage
         {
-            Caption = "MoziPDF",
+            Caption = "SmartPDF",
             Heading = $"Änderungen an „{Path.GetFileName(currentPath)}“ speichern?",
             Text = "Die Hervorhebungen und Anmerkungen gehen sonst verloren.",
             Icon = TaskDialogIcon.Warning,
@@ -424,12 +475,12 @@ public partial class MainForm : Form
         };
     }
 
-    /// <summary>Abgelegte Dateien öffnen: die erste PDF in diesem Fenster, jede weitere in einem neuen MoziPDF-Fenster (ein Dokument je
+    /// <summary>Abgelegte Dateien öffnen: die erste PDF in diesem Fenster, jede weitere in einem neuen SmartPDF-Fenster (ein Dokument je
     /// Fenster). Keine PDF dabei: Hinweis.</summary>
     private async void OpenDroppedFiles(IReadOnlyList<string> paths)
     {
         var pdfs = paths.Where(p => p.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && File.Exists(p)).ToList();
-        if (pdfs.Count == 0) { ShowError("Keine PDF-Datei", "MoziPDF öffnet nur PDF-Dateien."); return; }
+        if (pdfs.Count == 0) { ShowError("Keine PDF-Datei", "SmartPDF öffnet nur PDF-Dateien."); return; }
         foreach (var more in pdfs.Skip(1)) { StartNewWindow(more); }
         var first = pdfs[0];
         if (!pageReady) { if (startFile == null) { startFile = first; } else { StartNewWindow(first); } return; } // vor dem ersten Laden: die Startdatei bleibt
@@ -475,19 +526,38 @@ public partial class MainForm : Form
         webView.Focus();
     }
 
-    // ==== Programminformationen
+    // ==== Hilfe und Programminformationen
 
-    /// <summary>„?“ in der Viewer-Leiste oder F1: kurze Programmbeschreibung, Version, PDF.js-Version, Autor und Lizenz.</summary>
+    /// <summary>Hilfedatei neben der EXE (Quelle SmartPDF-Hilfe.html, erzeugt von make-help.ps1).</summary>
+    private static string HelpFile => Path.Combine(AppContext.BaseDirectory, "SmartPDF-Hilfe.pdf");
+
+    private long lastHelpTicks;
+
+    /// <summary>„?“ in der Viewer-Leiste oder F1: die Hilfe-PDF – ohne Dokument in diesem Fenster, sonst in einem neuen (das angezeigte
+    /// Dokument bleibt ungestört; wie in PDFlight). F1 im Viewer kommt zweimal an (Seitenskript und HelpRequested) – der zweite Aufruf
+    /// binnen einer Sekunde wird verworfen, sonst gingen zwei Fenster auf.</summary>
     private void ShowHelp()
     {
-        if (helpOpen) { return; } // F1 im Viewer kommt zweimal an: im Seitenskript und über HelpRequested
-        helpOpen = true;
+        var now = Environment.TickCount64;
+        if (now - lastHelpTicks < 1000) { return; }
+        lastHelpTicks = now;
+        if (!File.Exists(HelpFile)) { ShowError("Hilfedatei nicht gefunden", HelpFile); return; }
+        if (string.Equals(currentPath, HelpFile, StringComparison.OrdinalIgnoreCase)) { return; } // wird hier schon angezeigt
+        if (!pageReady) { startFile ??= HelpFile; return; } // Viewer steht noch nicht: wie eine Startdatei
+        if (currentPath == null) { ShowFile(HelpFile); } else { StartNewWindow(HelpFile); }
+    }
+
+    /// <summary>„i“ in der Viewer-Leiste: kurze Programmbeschreibung, Version, PDF.js-Version, Autor und Lizenz.</summary>
+    private void ShowAbout()
+    {
+        if (aboutOpen) { return; }
+        aboutOpen = true;
         try { ShowAboutDialog(); }
-        finally { helpOpen = false; }
+        finally { aboutOpen = false; }
         FocusViewer();
     }
 
-    private bool helpOpen;
+    private bool aboutOpen;
 
     private void ShowAboutDialog()
     {
@@ -495,18 +565,18 @@ public partial class MainForm : Form
         using var appIcon = Icon.ExtractIcon(Application.ExecutablePath, 0, LogicalToDeviceUnits(32));
         var page = new TaskDialogPage
         {
-            Caption = "Über MoziPDF",
-            Heading = "MoziPDF",
+            Caption = "Über SmartPDF",
+            Heading = "SmartPDF",
             Text = $"Ein einfacher PDF-Betrachter auf <a href=\"{PdfJsWebsite}\">PDF.js</a>-Basis."
                  + Environment.NewLine + Environment.NewLine
                  + "PDF.js wird im Firefox-Webbrowser verwendet." + Environment.NewLine
                  + "PDF.js arbeitet vollständig offline und verschickt" + Environment.NewLine
-                 + "keine Daten. MoziPDF ist kein Mozilla-Produkt.",
+                 + "keine Daten. SmartPDF ist kein Mozilla-Produkt.",
             Icon = appIcon != null ? new TaskDialogIcon(appIcon) : TaskDialogIcon.Information,
             Footnote = new TaskDialogFootnote
             {
-                Text = $"Version {version}   •   PDF.js {PdfJsVersion() ?? "?"}   •   © 2026 Wilhelm Happe" + Environment.NewLine
-                     + "MoziPDF und PDF.js stehen unter der <a href=\"apache\">Apache-Lizenz 2.0</a>.",
+                Text = $"Version {version}   •   PDF.js {PdfJsVersion() ?? "?"}   •   © 2026 W. Happe" + Environment.NewLine
+                     + "SmartPDF und PDF.js stehen unter der <a href=\"apache\">Apache-Lizenz 2.0</a>.",
                 Icon = TaskDialogIcon.Information,
             },
             EnableLinks = true,
@@ -557,7 +627,7 @@ public partial class MainForm : Form
         if (IsDisposed || !IsHandleCreated) { return; } // z.B. ein unterbrochener Download nach dem Schließen – dann gibt es niemanden mehr zu warnen
         BeginInvoke(() => TaskDialog.ShowDialog(this, new TaskDialogPage
         {
-            Caption = "MoziPDF",
+            Caption = "SmartPDF",
             Heading = heading,
             Text = text,
             Icon = TaskDialogIcon.Error,

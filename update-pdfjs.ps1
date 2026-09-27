@@ -56,7 +56,7 @@ try {
         if (-not (Test-Path $ZipFile)) { throw "Archiv nicht gefunden: $ZipFile" }
         $zip = (Resolve-Path $ZipFile).Path; $latest = $null; $digest = $null; $ownZip = $false
     } else {
-        $release = Invoke-RestMethod 'https://api.github.com/repos/mozilla/pdf.js/releases/latest' -Headers @{ 'User-Agent' = 'MoziPDF-update'; 'Accept' = 'application/vnd.github+json' }
+        $release = Invoke-RestMethod 'https://api.github.com/repos/mozilla/pdf.js/releases/latest' -Headers @{ 'User-Agent' = 'SmartPDF-update'; 'Accept' = 'application/vnd.github+json' }
         $latest = [version]($release.tag_name.TrimStart('v'))
         $asset = $release.assets | Where-Object { $_.name -like 'pdfjs-*-dist.zip' -and $_.name -notlike '*legacy*' } | Select-Object -First 1
         if (-not $asset) { throw "Im Release $($release.tag_name) gibt es kein dist-Archiv." }
@@ -89,7 +89,7 @@ try {
     if (Test-Path $backup) { Remove-Item $backup -Recurse -Force }
     if ($ownZip) { Remove-Item $zip -ErrorAction SilentlyContinue }
     "PDF.js $new nach $Target übernommen. Jetzt neu bauen (dotnet build) und ggf. den Installer neu erzeugen."
-    "Danach prüfen – MoziPDF greift auf PDF.js-Interna zu: Öffnen-Knopf und Strg+O (_openFileInput), Rückfrage beim Schließen mit"
+    "Danach prüfen – SmartPDF greift auf PDF.js-Interna zu: Öffnen-Knopf und Strg+O (_openFileInput), Rückfrage beim Schließen mit"
     "Änderungen (_hasChanges), Strg+H/T/I und Drag & Drop (Element-IDs der Leiste)."
     exit 0
 }
