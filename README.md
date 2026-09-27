@@ -1,3 +1,5 @@
+<img src="SmartPDF.png" alt="SmartPDF icon" width="96" align="right">
+
 # SmartPDF
 
 A lightweight PDF viewer for Windows, built on Mozilla's [PDF.js](https://github.com/mozilla/pdf.js) and running in WebView2.
